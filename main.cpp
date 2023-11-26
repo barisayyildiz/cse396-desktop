@@ -1,4 +1,5 @@
 #include <QtWidgets/QApplication>
+#include <QLocale>
 
 #include "MainWindow.h"
 

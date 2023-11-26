@@ -173,6 +173,7 @@ void OpenGLWidget::keyPressEvent(QKeyEvent * event)
 
 void OpenGLWidget::mousePressEvent(QMouseEvent* event)
 {
+    qDebug() << "mouse press event";
     lastX = event->x();
     lastY = event->y();
     event->accept();
@@ -188,6 +189,8 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
 
     lastX = xpos;
     lastY = ypos;
+
+    qDebug() << deltaX << ", " << deltaY;
 
     if (event->buttons() & Qt::LeftButton)
     {
@@ -213,8 +216,6 @@ void OpenGLWidget::wheelEvent(QWheelEvent* event)
     float  sensitivity= 0.002f;
 
     camera.ProcessMouseScroll(delta * sensitivity);
-
-    qDebug() << delta << ", " << sensitivity;
 
     // Accept the event to prevent it from being propagated further
     event->accept();

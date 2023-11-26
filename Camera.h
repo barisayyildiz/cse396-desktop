@@ -136,7 +136,7 @@ public:
     glm::vec3 Target;
 
     //Constructor with vectors
-    OrbitCamera(glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), Zoom(ZOOM)
+    OrbitCamera(glm::vec3 target = glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), Zoom(ZOOM)
     {
         Target = target;
         Yaw = yaw;
@@ -165,6 +165,9 @@ public:
         {
             Yaw += xoffset * OrbitSpeed;
             Pitch += yoffset * OrbitSpeed;
+
+            qDebug() << "Yaw: " << Yaw;
+            qDebug() << "Pitch: " << Pitch;
 
             //Clamp the pitch to avoid flipping
             if (Pitch > 89.0f)

@@ -3,7 +3,7 @@
 #include "scanner.h"
 
 #include "Model.h"
-
+#include <QTextStream>
 #include <QFileDialog>
 #include <QAction>
 #include <QLineSeries>
@@ -176,9 +176,16 @@ int readData(int& serverSocket, ScannedPoints* scannedPoints, PointCloud* pointC
             recv(clientSocket, buffer, sizeof(buffer), 0);
             send(clientSocket, buffer, sizeof(buffer), 0);
             //qDebug() << "buffer: " << buffer;
-            int x, y, z;
-            sscanf(buffer, "%d %d %d", &x, &y, &z);
-            pointCloud->addNewDataPoint((double)x, (double)y, (double)z);
+
+            qDebug() << buffer;
+            double x, y, z;
+
+            QTextStream stream(buffer);
+            stream >> x >> y >> z;
+
+            std::cout << "x: " << x << ", y: " << y << ", z: " << z << std::endl;
+            //qDebug() << "x: " << x << ", y: " << y << ", z: " << z;
+            pointCloud->addNewDataPoint(x, y, z);
         }
 
         if(round%5 == 0) {
@@ -203,7 +210,7 @@ int readData(int& serverSocket, ScannedPoints* scannedPoints, PointCloud* pointC
 
 
 MainWindow::MainWindow(QWidget *parent)
-	: QMainWindow(parent)
+    : QMainWindow(parent)
 {
 	ui.setupUi(this);
 
