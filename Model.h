@@ -10,6 +10,11 @@
 
 #include <assimp/Importer.hpp>
 
+enum ExportFormat {
+    OBJ,
+    STL
+};
+
 
 struct aiScene;
 struct aiNode;
@@ -32,7 +37,7 @@ public:
 
 	void SetMeshTexture(int meshIndex, std::string texturePath);
 
-    bool ExportModel(std::string filePath);
+    bool ExportModel(std::string filePath, ExportFormat exportFormat);
 
 protected:
 	std::vector<Mesh> m_meshes;

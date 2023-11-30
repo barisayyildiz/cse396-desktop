@@ -53,19 +53,21 @@ void Model::SetMeshTexture(int meshIndex, std::string texturePath)
 	m_meshes.at(meshIndex).material->Init("", texturePath);
 }
 
-bool Model::ExportModel(std::string filePath)
+bool Model::ExportModel(std::string filePath, ExportFormat exportFormat)
 {
-	Assimp::Exporter exporter;
-	
-	aiReturn exportStatus = exporter.Export(m_importer.GetScene(), "obj", filePath);
+    std::string format = (exportFormat == ExportFormat::OBJ) ? "obj" : "stl";
+    Assimp::Exporter exporter;
 
-	if (exportStatus != aiReturn_SUCCESS) 
-	{
-		std::cerr << "ERROR::ASSIMP::Failed to export model" << std::endl;
-		return false;
-	}
+    auto scene = m_importer.GetScene();
+    aiReturn exportStatus = exporter.Export(m_importer.GetScene(), format, filePath);
 
-	return true;
+    if (exportStatus != aiReturn_SUCCESS)
+    {
+        std::cerr << "ERROR::ASSIMP::Failed to export model" << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 bool Model::loadModel(const std::string Path, const bool flipWindingOrder, const bool loadMaterial = true) {

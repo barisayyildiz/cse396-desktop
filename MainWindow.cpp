@@ -219,16 +219,25 @@ MainWindow::MainWindow(QWidget *parent)
     auto exportOBJAction = new QAction(QString("OBJ"), (QObject*)ui.exportBtn->menu());
     auto exportSTLAction = new QAction(QString("STL"), (QObject*)ui.exportBtn->menu());
 
-    connect(exportOBJAction, &QAction::triggered, [this](bool checked) {
+    connect(exportOBJAction, &QAction::triggered, [=]() {
+        QString fileName = QFileDialog::getSaveFileName(this,
+                                                        "Save File",
+                                                        QDir::homePath(),  // Starting directory
+                                                        "OBJ Files (*.obj)",
+                                                        nullptr,
+                                                        QFileDialog::DontUseNativeDialog);
+        ui.openGLWidget->model->ExportModel(fileName.toStdString(), ExportFormat::OBJ);
+    });
 
-		QString fileName = QFileDialog::getSaveFileName(this, "Save File", QString(), "OBJ Files (*.obj)");
-
-		ui.openGLWidget->model->ExportModel(fileName.toStdString());
-
-		});
-
-	connect(exportSTLAction, &QAction::triggered, [this](bool checked) {
-		});
+    QObject::connect(exportSTLAction, &QAction::triggered, [=]() {
+        QString fileName = QFileDialog::getSaveFileName(this,
+                                                        "Save File",
+                                                        QDir::homePath(),  // Starting directory
+                                                        "STL Files (*.stl)",
+                                                        nullptr,
+                                                        QFileDialog::DontUseNativeDialog);
+        ui.openGLWidget->model->ExportModel(fileName.toStdString(), ExportFormat::STL);
+    });
 
 	ui.exportBtn->addAction(exportOBJAction);
 	ui.exportBtn->addAction(exportSTLAction);
