@@ -11,6 +11,7 @@
 #include <QChartView>
 #include <QtDataVisualization/Q3DScatter>
 #include <QtDataVisualization/QScatter3DSeries>
+#include <QListWidgetItem>
 
 // charts
 #include "pointcloud.h"
@@ -238,6 +239,17 @@ MainWindow::MainWindow(QWidget *parent)
                                                         QFileDialog::DontUseNativeDialog);
         ui.openGLWidget->model->ExportModel(fileName.toStdString(), ExportFormat::STL);
     });
+
+    QListWidgetItem* headerItem = new QListWidgetItem("Stats");
+    QFont font = headerItem->font();
+    font.setPointSize(20); // Set a custom font size for the header item
+    headerItem->setFont(font);
+    ui.listWidget->addItem(headerItem);
+    ui.listWidget->setSpacing(10);
+    ui.listWidget->addItem(new QListWidgetItem("Additional text"));
+    ui.listWidget->addItem(new QListWidgetItem("Additional text"));
+    ui.listWidget->addItem(new QListWidgetItem("Additional text"));
+    ui.listWidget->addItem(new QListWidgetItem("Additional text"));
 
 	ui.exportBtn->addAction(exportOBJAction);
 	ui.exportBtn->addAction(exportSTLAction);
