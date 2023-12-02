@@ -17,6 +17,9 @@
 #include "pointcloud.h"
 #include "scannedpoints.h"
 
+// images
+#include "capturedimages.h"
+
 // communication and multithreading
 #include <iostream>
 #include <stdlib.h>
@@ -294,6 +297,10 @@ MainWindow::MainWindow(QWidget *parent)
     container->setFocusPolicy(Qt::StrongFocus);
 
     ui.pointCloudVLayout->addWidget(container);
+
+    CapturedImages *capturedImages = new CapturedImages(scanner);
+    ui.imagesVLayout->addWidget(capturedImages);
+
 
     // new thread
     std::thread t1(readData, std::ref(dataSocket), scannedPoints, pointCloud, scanner);

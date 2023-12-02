@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <QObject>
+#include <QPoint>
 
 enum ScannerState {
     RUNNING,
@@ -19,6 +20,8 @@ public:
     void startTimer();
     void stopTimer();
     void resetTimer();
+    QPoint* getTopLeftPoint() {return new QPoint(277.0, 90.0);}
+    QPoint* getBottomRightPoint () {return new QPoint(733.0, 634.0);}
 public:
     ScannerState getScannerState();
     int getHorizontalPrecision();
