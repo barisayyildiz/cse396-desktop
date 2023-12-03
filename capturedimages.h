@@ -21,6 +21,7 @@ private:
     QPixmap *finalImage;
     QRect *rect;
     QPainter *initialPainter;
+    Scanner *scanner;
 
     QVBoxLayout *layout;
 

@@ -5,6 +5,7 @@
 CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
     : QWidget{parent}
 {
+    this->scanner = scanner;
     this->layout = new QVBoxLayout(this);
 
     this->sliderValue = 0;
@@ -50,6 +51,7 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
     this->layout->addWidget(slider);
 
     this->slider->setValue(0);
+    this->slider->setRange(0, scanner->getHorizontalPrecision()-1);
 
     // Set layout for the content widget
     this->contentWidget->setLayout(contentLayout);
