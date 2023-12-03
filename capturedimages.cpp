@@ -71,22 +71,10 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
         originalPainter.setPen(QColor(Qt::green));
         originalPainter.drawRect(*this->rect);
 
-        // Add a grey border to each image
-        addBorder(*this->originalImage, QColor(Qt::gray));
-        addBorder(*this->finalImage, QColor(Qt::gray));
-
         // Update the displayed pixmaps
         this->originalImageLabel->setPixmap(*this->originalImage);
         this->finalImageLabel->setPixmap(*this->finalImage);
     });
 
 
-}
-
-void CapturedImages::addBorder(QPixmap& pixmap, const QColor& color, int borderWidth) {
-    QPainter painter(&pixmap);
-    painter.setPen(color);
-    QRect borderRect(0, 0, pixmap.width(), pixmap.height());
-    painter.drawRect(borderRect.adjusted(borderWidth, borderWidth, -borderWidth, -borderWidth));
-    painter.end();
 }

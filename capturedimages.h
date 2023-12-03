@@ -36,8 +36,6 @@ private:
     QLabel *finalLabel;
     QLabel *finalImageLabel;
 
-    void addBorder(QPixmap& pixmap, const QColor& color, int borderWidth = 5);
-
 };
 
 
