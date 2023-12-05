@@ -20,6 +20,9 @@
 // images
 #include "capturedimages.h"
 
+// calibration
+#include "calibration.h"
+
 // communication and multithreading
 #include <iostream>
 #include <stdlib.h>
@@ -30,6 +33,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 // signal handling
 #include <signal.h>
@@ -181,16 +185,54 @@ int readData(int& serverSocket, ScannedPoints* scannedPoints, PointCloud* pointC
             send(clientSocket, buffer, sizeof(buffer), 0);
             //qDebug() << "buffer: " << buffer;
 
-            qDebug() << buffer;
+            //qDebug() << buffer;
             double x, y, z;
 
             QTextStream stream(buffer);
             stream >> x >> y >> z;
 
-            std::cout << "x: " << x << ", y: " << y << ", z: " << z << std::endl;
+            //std::cout << "x: " << x << ", y: " << y << ", z: " << z << std::endl;
             //qDebug() << "x: " << x << ", y: " << y << ", z: " << z;
             pointCloud->addNewDataPoint(x, y, z);
         }
+
+        int imgSize;
+        recv(clientSocket, &imgSize, sizeof(int), 0);
+        qDebug() << "imgSize: " << imgSize;
+
+        std::string save_path = "received_files/original/" + std::to_string(round-1) + ".jpg";
+        int fileDescriptor = open(save_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        for (int i = 0; i < imgSize; i += BUFFER_SIZE) {
+            int remaining = std::min(BUFFER_SIZE, imgSize - i);
+            memset(buffer, '\0', BUFFER_SIZE);
+            recv(clientSocket, buffer, remaining, 0);
+
+            // Write the received data to the file
+            write(fileDescriptor, buffer, remaining);
+
+            send(clientSocket, buffer, sizeof(buffer), 0);
+        }
+        // Close the file and socket
+        close(fileDescriptor);
+
+        imgSize;
+        recv(clientSocket, &imgSize, sizeof(int), 0);
+        qDebug() << "imgSize: " << imgSize;
+
+        save_path = "received_files/final/" + std::to_string(round-1) + ".jpg";
+        fileDescriptor = open(save_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        for (int i = 0; i < imgSize; i += BUFFER_SIZE) {
+            int remaining = std::min(BUFFER_SIZE, imgSize - i);
+            memset(buffer, '\0', BUFFER_SIZE);
+            recv(clientSocket, buffer, remaining, 0);
+
+            // Write the received data to the file
+            write(fileDescriptor, buffer, remaining);
+
+            send(clientSocket, buffer, sizeof(buffer), 0);
+        }
+        // Close the file and socket
+        close(fileDescriptor);
 
         if(round%5 == 0) {
             pointCloud->reRenderGraph();
@@ -300,6 +342,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     CapturedImages *capturedImages = new CapturedImages(scanner);
     ui.imagesVLayout->addWidget(capturedImages);
+
+    Calibration *calibration = new Calibration(scanner);
+    ui.calibrationVLayout->addWidget(calibration);
 
 
     // new thread
