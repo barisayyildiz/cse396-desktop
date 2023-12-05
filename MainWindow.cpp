@@ -346,6 +346,8 @@ MainWindow::MainWindow(QWidget *parent)
     Calibration *calibration = new Calibration(scanner);
     ui.calibrationVLayout->addWidget(calibration);
 
+    QObject::connect(scanner, &Scanner::updateScannerSignal, capturedImages, &CapturedImages::capturedImagesUpdated);
+
 
     // new thread
     std::thread t1(readData, std::ref(dataSocket), scannedPoints, pointCloud, scanner);

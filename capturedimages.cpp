@@ -65,8 +65,8 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
     connect(slider, &QSlider::valueChanged, [this](
                                                 int value) {
         // Load images based on slider value
-        this->originalImage = new QPixmap("images/original/" + QString::number(value) + ".jpg");
-        this->finalImage = new QPixmap("images/red_line/" + QString::number(value) + ".jpg");
+        this->originalImage = new QPixmap("received_files/original/" + QString::number(value) + ".jpg");
+        this->finalImage = new QPixmap("received_files/final/" + QString::number(value) + ".jpg");
 
         // Draw bounding box on the original image
         QPainter originalPainter(this->originalImage);
@@ -79,4 +79,10 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
     });
 
 
+}
+
+void CapturedImages::capturedImagesUpdated()
+{
+    this->slider->setRange(0, this->scanner->getCurrentStep());
+    this->slider->setValue(this->scanner->getCurrentStep());
 }
