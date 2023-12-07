@@ -262,6 +262,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 	ui.showEdgesBtn->setCheckable(true);
 
+    Scanner* scanner = new Scanner();
+
     auto exportOBJAction = new QAction(QString("OBJ"), (QObject*)ui.exportBtn->menu());
     auto exportSTLAction = new QAction(QString("STL"), (QObject*)ui.exportBtn->menu());
 
@@ -299,19 +301,39 @@ MainWindow::MainWindow(QWidget *parent)
 	ui.exportBtn->addAction(exportOBJAction);
 	ui.exportBtn->addAction(exportSTLAction);
 
+    // sliders
+    ui.verticalSlider->setValue(scanner->getVerticalPrecision());
+    ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()));
+    ui.horizontalSlider->setValue(scanner->getHorizontalPrecision());
+    ui.horizontalPrecisionLabel->setText(QString::number(scanner->getHorizontalPrecision()));
+
+    ui.horizontalSlider->setRange(0, 8);  // 0 corresponds to 2, 8 corresponds to 512
+    ui.horizontalSlider->setTickPosition(QSlider::TicksBelow);
+    ui.horizontalSlider->setTickInterval(1);
+
+    const QVector<int> horizontalPrecisionValues = {2, 4, 8, 16, 32, 64, 128, 256, 512};
+    connect(ui.horizontalSlider, &QSlider::valueChanged, this, [this, scanner, horizontalPrecisionValues](int value) {
+        int horizontalPrecision = horizontalPrecisionValues.at(value);
+        scanner->setHorizontalPrecision(horizontalPrecision);
+        ui.horizontalPrecisionLabel->setText(QString::number(scanner->getHorizontalPrecision()));
+    });
+    connect(ui.verticalSlider, &QSlider::valueChanged, scanner, [this, scanner](int value) {
+        qDebug() << value;
+        scanner->setVerticalPrecision(value);
+        ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()));
+    });
+
 	connect(ui.exportBtn, &QToolButton::clicked, [this]() {
 		ui.exportBtn->showMenu();
-		});
+    });
 
     connect(ui.colorPickerWidget, &ColorPickerWidget::colorSelected, ui.openGLWidget, &OpenGLWidget::SetBackgroundColor);
 
 	connect(ui.imagePickerWidget, &ImagePickerWidget::textureSelected, ui.openGLWidget, &OpenGLWidget::SetModelTexture);
 
 	connect(ui.showEdgesBtn, &QPushButton::toggled, ui.openGLWidget, [this](bool checked) {
-
         ui.openGLWidget->ToggleWireframe();
-
-        });
+    });
 
     // 2d chart
     ScannedPoints *scannedPoints = new ScannedPoints();
@@ -320,8 +342,6 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *button = new QPushButton("Add new data point");
     ui.chartsVLayout->addWidget(scannedPoints);
     ui.chartsVLayout->addWidget(button);
-
-    Scanner* scanner = new Scanner();
 
     Footer* footer = new Footer(scanner);
     ui.chartsVLayout->addLayout(footer);
