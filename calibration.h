@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
+#include <QPoint>
+#include <QPushButton>
 #include "scanner.h"
 
 class Calibration : public QWidget
@@ -15,6 +17,18 @@ private:
     Scanner* scanner;
 
     QGridLayout *layout;
+
+    QPoint* topLeft;
+    QPoint* topRight;
+    QPoint* bottomRight;
+    QPoint* bottomLeft;
+
+    QPushButton* startButton;
+    QPushButton* resetButton;
+    QPushButton* submitButton;
+
+    int counter;
+    bool started;
 
 signals:
 };

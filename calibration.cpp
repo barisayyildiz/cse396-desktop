@@ -3,9 +3,10 @@
 #include <QPixmap>
 #include <QLabel>
 #include <QPushButton>
+#include <QMessageBox>
 
 Calibration::Calibration(Scanner* scanner, QWidget *parent)
-    : QWidget{parent}
+    : QWidget{parent}, started(false), counter(0)
 {
     this->scanner = scanner;
     //this->layout = new QVBoxLayout(this);
@@ -21,20 +22,41 @@ Calibration::Calibration(Scanner* scanner, QWidget *parent)
 
     QWidget *buttonsWidget = new QWidget;
     QVBoxLayout *buttonLayout = new QVBoxLayout(buttonsWidget);
-    buttonLayout->setSpacing(20);
 
-    QPushButton *startButton = new QPushButton("Start to Calibrate", this);
-    QPushButton *resetButton = new QPushButton("Reset the Calibration", this);
-    QPushButton *submitButton = new QPushButton("Submit", this);
+    startButton = new QPushButton("Start to Calibrate", this);
+    resetButton = new QPushButton("Reset the Calibration", this);
+    submitButton = new QPushButton("Submit", this);
 
-    buttonLayout->addWidget(startButton);
-    buttonLayout->addItem(new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Fixed));  // Adjust the spacing here
+    buttonLayout->addItem(new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    buttonLayout->addWidget(startButton);// Adjust the spacing here
     buttonLayout->addWidget(resetButton);
-    buttonLayout->addItem(new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Fixed));  // Adjust the spacing here
     buttonLayout->addWidget(submitButton);
+    buttonLayout->addItem(new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     this->layout->addWidget(buttonsWidget, 0, 4, 1, 1);
 
+    resetButton->setEnabled(false);
+
+    connect(startButton, &QPushButton::pressed, [this]() {
+        this->started = true;
+        resetButton->setEnabled(false);
+        qDebug() << this->started;
+    });
+
+    connect(resetButton, &QPushButton::pressed, [this]() {
+        this->started = false;
+        this->counter = 0;
+        qDebug() << this->started;
+    });
+
+    connect(submitButton, &QPushButton::pressed, [this]() {
+        this->started = true;
+        qDebug() << this->started;
+
+        QMessageBox msgBox;
+        msgBox.setText("The document has been modified.");
+        msgBox.exec();
+    });
 
     this->setLayout(this->layout);
 
