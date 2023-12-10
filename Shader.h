@@ -48,18 +48,15 @@ public:
         vertex = OPENGLFUNCTIONS->glCreateShader(GL_VERTEX_SHADER);
         OPENGLFUNCTIONS->glShaderSource(vertex, 1, &vShaderCode, NULL);
         OPENGLFUNCTIONS->glCompileShader(vertex);
-        CheckCompileErrors(vertex, "VERTEX");
 
         fragment = OPENGLFUNCTIONS->glCreateShader(GL_FRAGMENT_SHADER);
         OPENGLFUNCTIONS->glShaderSource(fragment, 1, &fShaderCode, NULL);
         OPENGLFUNCTIONS->glCompileShader(fragment);
-        CheckCompileErrors(fragment, "FRAGMENT");
 
         ID = OPENGLFUNCTIONS->glCreateProgram();
         OPENGLFUNCTIONS->glAttachShader(ID, vertex);
         OPENGLFUNCTIONS->glAttachShader(ID, fragment);
         OPENGLFUNCTIONS->glLinkProgram(ID);
-        CheckCompileErrors(ID, "PROGRAM");
 
         OPENGLFUNCTIONS->glDeleteShader(vertex);
         OPENGLFUNCTIONS->glDeleteShader(fragment);
@@ -124,24 +121,5 @@ public:
     }
 
 private:
-    void CheckCompileErrors(unsigned int shader, std::string type) {
-        int success;
-        char infoLog[1024];
-        if (type != "PROGRAM") {
-            OPENGLFUNCTIONS->glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-            if (!success) {
-                OPENGLFUNCTIONS->glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << infoLog << std::endl;
-            }
-        }
-        else {
-            OPENGLFUNCTIONS->glGetProgramiv(shader, GL_LINK_STATUS, &success);
-            if (!success) {
-                OPENGLFUNCTIONS->glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << infoLog << std::endl;
-            }
-        }
-    }
-
     unsigned int ID;
 };

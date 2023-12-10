@@ -46,16 +46,7 @@ void OpenGLWidget::initializeGL()
 
     projection = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
 
-    glGenBuffers(1, &uboMatrices);
-    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
-    glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));
-
-    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-
     shader = new Shader("res/shaders/shader.vs", "res/shaders/shader.ps");
-
     model = new Model("res/models/3d.obj", "New Model");
 
     std::vector<std::string> paths{ "res/textures/floor.jpg", "res/textures/flower-design.jpg", "res/textures/grass.jpg", "res/textures/wood.jpg" };
@@ -94,10 +85,6 @@ void OpenGLWidget::paintGL()
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     else
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-
-    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(camera.GetViewMatrix()));
 
     shader->Use();
 
@@ -144,36 +131,11 @@ void OpenGLWidget::resizeGL(int w, int h)
     float aspectRatio = width() / (float)height();
 
     projection = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
-
-    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
 }
 
-
-void OpenGLWidget::keyPressEvent(QKeyEvent * event)
-{
-    float sec = deltaTime / 1000.0f;
-
-    /*if (event->key() == Qt::Key::Key_W)
-        camera.ProcessKeyboard(Camera_Movement::FORWARD, sec);
-    if (event->key() == Qt::Key::Key_S)
-        camera.ProcessKeyboard(Camera_Movement::BACKWARD, sec);
-    if (event->key() == Qt::Key::Key_A)
-        camera.ProcessKeyboard(Camera_Movement::LEFT, sec);
-    if (event->key() == Qt::Key::Key_D)
-        camera.ProcessKeyboard(Camera_Movement::RIGHT, sec);*/
-
-    if (event->key() == Qt::Key::Key_W)
-        camera.ProcessMouseScroll(0.1f);
-    if (event->key() == Qt::Key::Key_S)
-        camera.ProcessMouseScroll(-0.1f);
-
-    event->accept();
-}
 
 void OpenGLWidget::mousePressEvent(QMouseEvent* event)
 {
-    qDebug() << "mouse press event";
     lastX = event->x();
     lastY = event->y();
     event->accept();
@@ -189,8 +151,6 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
 
     lastX = xpos;
     lastY = ypos;
-
-    qDebug() << deltaX << ", " << deltaY;
 
     if (event->buttons() & Qt::LeftButton)
     {
