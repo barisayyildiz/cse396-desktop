@@ -23,7 +23,7 @@ struct aiMesh;
 class Model {
 public:
 	Model() = default;
-	Model(const std::string Path, const std::string Name, const bool flipWindingOrder = false, const bool loadMaterial = true);
+    Model(const std::string Path, const std::string Name);
 	Model(const std::string Name, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const MaterialPtr& material) noexcept;
 	Model(const std::string Name, const Mesh& mesh) noexcept;
 	virtual ~Model() = default;
@@ -43,9 +43,9 @@ protected:
 	std::vector<Mesh> m_meshes;
 
 private:
-	bool loadModel(const std::string Path, const bool flipWindingOrder, const bool loadMaterial);
-	void processNode(aiNode* node, const aiScene* scene, const bool loadMaterial);
-	Mesh processMesh(aiMesh* mesh, const aiScene* scene, const bool loadMaterial);
+    bool loadModel(const std::string Path);
+    void processNode(aiNode* node, const aiScene* scene);
+    Mesh processMesh(aiMesh* mesh, const aiScene* scene);
 
 	Assimp::Importer m_importer;
 

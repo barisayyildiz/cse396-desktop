@@ -10,11 +10,11 @@
 #include "global.h"
 
 
-Model::Model(const std::string Path, const std::string Name, const bool flipWindingOrder, const bool loadMaterial) 
+Model::Model(const std::string Path, const std::string Name)
 	: m_name(Name), m_path(Path) 
 {
 
-	if (!loadModel(Path, flipWindingOrder, loadMaterial)) 
+    if (!loadModel(Path))
 	{
 		std::cerr << "Failed to load: " << Name << '\n';
 	}
@@ -70,7 +70,7 @@ bool Model::ExportModel(std::string filePath, ExportFormat exportFormat)
     return true;
 }
 
-bool Model::loadModel(const std::string Path, const bool flipWindingOrder, const bool loadMaterial = true) {
+bool Model::loadModel(const std::string Path) {
 #ifdef _DEBUG
 	std::cout << "Loading model: " << m_name << '\n';
 #endif
@@ -79,34 +79,19 @@ bool Model::loadModel(const std::string Path, const bool flipWindingOrder, const
 	
 	const aiScene* pScene{ nullptr };
 
-	if (flipWindingOrder) {
-		pScene = m_importer.ReadFile(Path.data(), aiProcess_Triangulate |
-			aiProcess_JoinIdenticalVertices |
-			aiProcess_GenUVCoords |
-			aiProcess_SortByPType |
-			aiProcess_RemoveRedundantMaterials |
-			aiProcess_FindInvalidData |
-			aiProcess_FlipUVs |
-			aiProcess_FlipWindingOrder | // Reverse back-face culling
-			aiProcess_CalcTangentSpace |
-			aiProcess_OptimizeMeshes |
-			aiProcess_SplitLargeMeshes);
-	}
-	else {
-		pScene = m_importer.ReadFile(Path.data(), aiProcess_Triangulate |
-			aiProcess_JoinIdenticalVertices |
-			aiProcess_GenUVCoords |
-			aiProcess_SortByPType |
-			aiProcess_RemoveRedundantMaterials |
-			aiProcess_FindInvalidData |
-			aiProcess_FlipUVs |
-			aiProcess_CalcTangentSpace |
-			aiProcess_GenSmoothNormals |
-			aiProcess_ImproveCacheLocality |
-			aiProcess_OptimizeMeshes |
-			aiProcess_SplitLargeMeshes);
-	}
-
+    pScene = m_importer.ReadFile(Path.data(),
+                                 aiProcess_Triangulate |
+                                 aiProcess_JoinIdenticalVertices |
+                                 aiProcess_GenUVCoords |
+                                 aiProcess_SortByPType |
+                                 aiProcess_RemoveRedundantMaterials |
+                                 aiProcess_FindInvalidData |
+                                 aiProcess_FlipUVs |
+                                 aiProcess_CalcTangentSpace |
+                                 aiProcess_GenSmoothNormals |
+                                 aiProcess_ImproveCacheLocality |
+                                 aiProcess_OptimizeMeshes |
+                                 aiProcess_SplitLargeMeshes);
 	// Check if scene is not null and model is done loading
 	if (!pScene || pScene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !pScene->mRootNode) 
 	{
@@ -116,7 +101,7 @@ bool Model::loadModel(const std::string Path, const bool flipWindingOrder, const
 		return false;
 	}
 
-	processNode(pScene->mRootNode, pScene, loadMaterial);
+    processNode(pScene->mRootNode, pScene);
 
 	m_path = Path.substr(0, Path.find_last_of('/')); // Strip the model file name and keep the model folder.
 	m_path += "/";
@@ -126,22 +111,22 @@ bool Model::loadModel(const std::string Path, const bool flipWindingOrder, const
 }
 
 /***********************************************************************************/
-void Model::processNode(aiNode* node, const aiScene* scene, const bool loadMaterial) {
+void Model::processNode(aiNode* node, const aiScene* scene) {
 
 	// Process all node meshes
 	for (auto i = 0; i < node->mNumMeshes; ++i) {
 		auto* mesh = scene->mMeshes[node->mMeshes[i]];
-		m_meshes.push_back(processMesh(mesh, scene, loadMaterial));
+        m_meshes.push_back(processMesh(mesh, scene));
 	}
 
 	// Process their children via recursive tree traversal
 	for (auto i = 0; i < node->mNumChildren; ++i) {
-		processNode(node->mChildren[i], scene, loadMaterial);
+        processNode(node->mChildren[i], scene);
 	}
 }
 
 
-Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene, const bool loadMaterial) 
+Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 {
 	std::vector<Vertex> vertices;
 
@@ -168,7 +153,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene, const bool loadMater
 			vertex.Tangent.z = mesh->mTangents[i].z;
 		}
 
-		if (mesh->HasTextureCoords(0) && loadMaterial) {
+        if (mesh->HasTextureCoords(0)) {
 			// Just take the first set of texture coords (since we could have up to 8)
 			vertex.TexCoords.x = mesh->mTextureCoords[0][i].x;
 			vertex.TexCoords.y = mesh->mTextureCoords[0][i].y;
@@ -190,45 +175,37 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene, const bool loadMater
 	}
 
 	// Process material
-	// http://assimp.sourceforge.net/lib_html/structai_material.html
-	if (loadMaterial) {
-		if (mesh->mMaterialIndex >= 0) {
-			const auto* mat = scene->mMaterials[mesh->mMaterialIndex];
+    // http://assimp.sourceforge.net/lib_html/structai_material.html
+    if (mesh->mMaterialIndex >= 0) {
+        const auto* mat = scene->mMaterials[mesh->mMaterialIndex];
 
-			aiString name;
-			mat->Get(AI_MATKEY_NAME, name);
+        aiString name;
+        mat->Get(AI_MATKEY_NAME, name);
 
-			// Is the material cached?
-			/*const auto cachedMaterial = ResourceManager::GetInstance().GetMaterial(name.C_Str());
-			if (cachedMaterial.has_value()) {
-				return Mesh(vertices, indices, cachedMaterial.value());
-			}*/
+        // Get the first texture for each texture type we need
+        // since there could be multiple textures per type
+        aiString albedoPath;
+        mat->GetTexture(aiTextureType_DIFFUSE, 0, &albedoPath);
 
-			// Get the first texture for each texture type we need
-			// since there could be multiple textures per type
-			aiString albedoPath;
-			mat->GetTexture(aiTextureType_DIFFUSE, 0, &albedoPath);
+        aiString metallicPath;
+        mat->GetTexture(aiTextureType_AMBIENT, 0, &metallicPath);
 
-			aiString metallicPath;
-			mat->GetTexture(aiTextureType_AMBIENT, 0, &metallicPath);
+        aiString normalPath;
+        mat->GetTexture(/*aiTextureType_HEIGHT*/aiTextureType_DIFFUSE, 0, &normalPath);
 
-			aiString normalPath;
-			mat->GetTexture(/*aiTextureType_HEIGHT*/aiTextureType_DIFFUSE, 0, &normalPath);
+        aiString roughnessPath;
+        mat->GetTexture(aiTextureType_SHININESS, 0, &roughnessPath);
 
-			aiString roughnessPath;
-			mat->GetTexture(aiTextureType_SHININESS, 0, &roughnessPath);
+        aiString alphaMaskPath;
+        mat->GetTexture(aiTextureType_OPACITY, 0, &alphaMaskPath);
 
-			aiString alphaMaskPath;
-			mat->GetTexture(aiTextureType_OPACITY, 0, &alphaMaskPath);
-
-			auto newMat = Material();
-			newMat.Init(name.C_Str(), normalPath.C_Str());
+        auto newMat = Material();
+        newMat.Init(name.C_Str(), normalPath.C_Str());
 
 
-			++m_numMats;
-			return Mesh(vertices, indices, std::make_shared<Material>(newMat));
-		}
-	}
+        ++m_numMats;
+        return Mesh(vertices, indices, std::make_shared<Material>(newMat));
+    }
 
 	return Mesh(vertices, indices);
 }

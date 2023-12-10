@@ -68,6 +68,4 @@ public:
     Shader* shader;
 
     glm::mat4 projection;
-
-    unsigned int uboMatrices;
 };
