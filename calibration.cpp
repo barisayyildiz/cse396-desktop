@@ -1,34 +1,38 @@
 #include "calibration.h"
-
 #include <QPixmap>
 #include <QLabel>
 #include <QPushButton>
 #include <QMessageBox>
+#include <QMouseEvent> // Add this include for mouse events
+#include <QPainter>
 
-Calibration::Calibration(Scanner* scanner, QWidget *parent)
-    : QWidget{parent}, started(false), counter(0)
+Calibration::Calibration(Scanner* scanner, QWidget* parent)
+    : QWidget{parent}, isActive(false), counter(0), isDrawn(false)
 {
     this->scanner = scanner;
-    //this->layout = new QVBoxLayout(this);
-    //QHBoxLayout *horizontalLayout = new QGridLayout(this);
     this->layout = new QGridLayout(this);
 
-    QPixmap *image = new QPixmap("images/original/0.jpg");
+    calibrationImage = new QPixmap("images/original/0.jpg");
 
-    QLabel *imageLabel = new QLabel;
+    imageLabel = new QLabel;
     imageLabel->setAlignment(Qt::AlignCenter);
-    imageLabel->setPixmap(*image);
+    imageLabel->setPixmap(*calibrationImage);
     this->layout->addWidget(imageLabel, 0, 0, 1, 4);
 
-    QWidget *buttonsWidget = new QWidget;
-    QVBoxLayout *buttonLayout = new QVBoxLayout(buttonsWidget);
+    imageLabel->setContentsMargins(0, 0, 0, 0);
+
+    // Install event filter for the image label
+    imageLabel->installEventFilter(this);
+
+    QWidget* buttonsWidget = new QWidget;
+    QVBoxLayout* buttonLayout = new QVBoxLayout(buttonsWidget);
 
     startButton = new QPushButton("Start to Calibrate", this);
     resetButton = new QPushButton("Reset the Calibration", this);
     submitButton = new QPushButton("Submit", this);
 
     buttonLayout->addItem(new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Expanding));
-    buttonLayout->addWidget(startButton);// Adjust the spacing here
+    buttonLayout->addWidget(startButton);
     buttonLayout->addWidget(resetButton);
     buttonLayout->addWidget(submitButton);
     buttonLayout->addItem(new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Expanding));
@@ -38,20 +42,28 @@ Calibration::Calibration(Scanner* scanner, QWidget *parent)
     resetButton->setEnabled(false);
 
     connect(startButton, &QPushButton::pressed, [this]() {
-        this->started = true;
-        resetButton->setEnabled(false);
-        qDebug() << this->started;
+        this->isActive = true;
+        resetButton->setEnabled(true);
+        qDebug() << this->isActive;
     });
 
     connect(resetButton, &QPushButton::pressed, [this]() {
-        this->started = false;
+        this->isActive = false;
         this->counter = 0;
-        qDebug() << this->started;
+        this->isDrawn = false;
+        this->calibrationPolygon.clear();
+
+        // Load the original image and set it as the pixmap
+        QPixmap originalImage("images/original/0.jpg");
+        imageLabel->setPixmap(originalImage);
+
+        this->update();
+        qDebug() << this->isActive;
     });
 
     connect(submitButton, &QPushButton::pressed, [this]() {
-        this->started = true;
-        qDebug() << this->started;
+        this->isActive = true;
+        qDebug() << this->isActive;
 
         QMessageBox msgBox;
         msgBox.setText("The document has been modified.");
@@ -59,5 +71,100 @@ Calibration::Calibration(Scanner* scanner, QWidget *parent)
     });
 
     this->setLayout(this->layout);
-
 }
+
+bool Calibration::eventFilter(QObject* obj, QEvent* event)
+{
+    if (event->type() == QEvent::MouseButtonPress && this->counter != 4 && isActive)
+    {
+        QLabel* imageLabel = qobject_cast<QLabel*>(obj);
+        if (imageLabel) {
+            QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+
+            qDebug() << "inside event filter";
+
+            // Check if the click is inside the image
+            if (mouseEvent->button() == Qt::LeftButton) {
+                // Get the coordinates of the click
+                int x = mouseEvent->x();
+                int y = mouseEvent->y();
+                switch(this->counter){
+                case 0:
+                    topLeft = new QPoint(x, y);
+                    break;
+                case 1:
+                    topRight = new QPoint(x, y);
+                    break;
+                case 2:
+                    bottomRight = new QPoint(x, y);
+                    break;
+                case 3:
+                    bottomLeft = new QPoint(x, y);
+                    break;
+                }
+                qDebug() << "x: " << x << ", y: " << y;
+                calibrationPolygon << QPoint(x,y);
+                this->counter++;
+                //qDebug() << QPoint(x,y);
+                //qDebug() << this->counter;
+                this->update();
+            }
+        }
+    }
+
+    // Call the base class implementation
+    return QWidget::eventFilter(obj, event);
+}
+
+void Calibration::paintEvent(QPaintEvent* event)
+{
+    // Call the base class implementation
+    QWidget::paintEvent(event);
+
+    if(calibrationPolygon.size() == 4 && !isActive) {
+
+    }
+
+    // If all four points are collected, draw the shape
+    if (calibrationPolygon.size() == 4 && !isDrawn && isActive) {
+        // Load the original image
+        QPixmap originalImage("images/original/0.jpg");
+
+        // Create a pixmap with the same size as the original image
+        QPixmap pixmap(originalImage.size());
+        pixmap.fill(Qt::transparent);
+
+        // Create a painter for the pixmap
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setPen(QColor(Qt::green));
+
+        // Convert widget coordinates to pixmap coordinates
+        QPolygonF pixmapPolygon;
+        for (const auto& point : calibrationPolygon) {
+            QPointF pixmapPoint = imageLabel->mapFrom(this, point);
+            pixmapPolygon << pixmapPoint;
+        }
+
+        // Draw the polygon and lines on the pixmap
+        painter.drawPolygon(pixmapPolygon);
+        painter.drawLine(pixmapPolygon[0], pixmapPolygon[1]);
+        painter.drawLine(pixmapPolygon[1], pixmapPolygon[2]);
+        painter.drawLine(pixmapPolygon[2], pixmapPolygon[3]);
+        painter.drawLine(pixmapPolygon[3], pixmapPolygon[0]);
+
+        // Create a painter for the original image
+        QPainter originalPainter(&originalImage);
+        originalPainter.setRenderHint(QPainter::Antialiasing, true);
+        originalPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+        // Draw the pixmap onto the original image
+        originalPainter.drawPixmap(0, 0, pixmap);
+
+        // Set the updated original image as the pixmap to the QLabel
+        imageLabel->setPixmap(originalImage);
+
+        isDrawn = true;
+    }
+}
+

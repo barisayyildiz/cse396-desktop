@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     MainWindow mainWindow;
-    mainWindow.showMaximized();
+    //mainWindow.showMaximized();
 
     mainWindow.setStyleSheet("background-color: #121212; color: white");
 

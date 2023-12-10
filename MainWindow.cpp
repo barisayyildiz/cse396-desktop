@@ -339,9 +339,7 @@ MainWindow::MainWindow(QWidget *parent)
     ScannedPoints *scannedPoints = new ScannedPoints();
     scannedPoints->addNewDataPoint(10);
     scannedPoints->addNewDataPoint(20);
-    QPushButton *button = new QPushButton("Add new data point");
     ui.chartsVLayout->addWidget(scannedPoints);
-    ui.chartsVLayout->addWidget(button);
 
     Footer* footer = new Footer(scanner);
     ui.chartsVLayout->addLayout(footer);
@@ -373,17 +371,10 @@ MainWindow::MainWindow(QWidget *parent)
     std::thread t1(readData, std::ref(dataSocket), scannedPoints, pointCloud, scanner);
     t1.detach();
 
-    QObject::connect(button, &QPushButton::clicked, [&]() {
-        qDebug() << "clicked...";
-        //chartView.addNewDataPoint(0.7);
-        sendConfig();
-    });
+    this->showMaximized(); // Maximize the window first
 
-    /*QObject::connect(pointCloud->series, &QLineSeries::pointAdded, [&] (int index) {
-        qDebug() << "index at " << index;
-    });
-*/
-
+    // Now set the fixed size to control the initial size when maximized
+    //this->setFixedSize(800, 600);
 }
 
 MainWindow::~MainWindow()
