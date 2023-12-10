@@ -35,6 +35,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         scanner.h scanner.cpp
         capturedimages.h capturedimages.cpp
         calibration.h calibration.cpp
+        connection.h connection.cpp
+
 
         )
 # Define target properties for Android with Qt 6 as:

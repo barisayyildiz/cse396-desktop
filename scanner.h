@@ -28,12 +28,14 @@ public:
     int getVerticalPrecision();
     int getCurrentStep();
     int getNumberOfPointsScanned();
+    bool getConnected() { return this->connected; }
     std::chrono::high_resolution_clock::time_point getStartTime();
     void setScannerState(ScannerState scannerState);
     void setHorizontalPrecision(int horizontalPrecision);
     void setVerticalPrecision(int verticalPrecision);
     void setCurrentStep(int currentStep);
     void setNumberOfPointsScanned(int numberOfPointsScanned);
+    void setConnected(bool connected) { this->connected = connected; }
     void updateScanner();
 signals:
     void updateScannerSignal();
@@ -43,6 +45,7 @@ private:
     int verticalPrecision;
     int currentStep;
     int numberOfPointsScanned;
+    bool connected;
 
     void calculateElapsedTime();
     void outputElapsedTime();

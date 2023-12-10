@@ -10,6 +10,7 @@ Scanner::Scanner()
     verticalPrecision = 455;
     currentStep = 0;
     numberOfPointsScanned = 0;
+    this->connected = false;
 }
 
 void Scanner::startTimer()

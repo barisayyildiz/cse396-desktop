@@ -23,6 +23,9 @@
 // calibration
 #include "calibration.h"
 
+// connection
+#include "connection.h"
+
 // communication and multithreading
 #include <iostream>
 #include <stdlib.h>
@@ -363,6 +366,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     Calibration *calibration = new Calibration(scanner);
     ui.calibrationVLayout->addWidget(calibration);
+
+    Connection *connection = new Connection(scanner);
+    ui.connectionVLayout->addWidget(connection);
 
     QObject::connect(scanner, &Scanner::updateScannerSignal, capturedImages, &CapturedImages::capturedImagesUpdated);
 
