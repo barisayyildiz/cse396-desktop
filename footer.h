@@ -1,6 +1,8 @@
 #ifndef FOOTER_H
 #define FOOTER_H
 
+#include <QLabel>
+#include <QPushButton>
 #include "scanner.h"
 
 class Footer: public QHBoxLayout
@@ -15,6 +17,11 @@ class Footer: public QHBoxLayout
         QLabel *degree = new QLabel();
         QLabel *numOfPoints = new QLabel();
         QLabel *time = new QLabel();
+        QPushButton *scanButton = new QPushButton();
+        QPushButton *cancelButton = new QPushButton();
+        QPushButton *stopButton = new QPushButton();
+        void setupWidgets();
+        void clearWidgets();
     public slots:
         void footerUpdated();
 };

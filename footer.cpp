@@ -19,7 +19,45 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QHBoxLayout(parent)
     numOfPoints->setText("0 points scanned");
     time->setText("0:0 seconds passed");
 
+    scanButton->setStyleSheet("padding: 10px; margin: 10px;");
+    cancelButton->setStyleSheet("padding: 10px; margin: 10px;");
+    stopButton->setStyleSheet("padding: 10px; margin: 10px;");
+    scanButton->setText("Start Scanning");
+    cancelButton->setText("Cancel Scanning");
+    stopButton->setText("Stop Scanning");
+
+    connect(scanButton, &QPushButton::clicked, [this]() {
+        this->scanner->setScannerState(ScannerState::RUNNING);
+        this->scanner->updateScanner();
+    });
+
+    connect(cancelButton, &QPushButton::clicked, [this]() {
+        this->scanner->setScannerState(ScannerState::FINISHED);
+        this->scanner->updateScanner();
+    });
+
+    connect(stopButton, &QPushButton::clicked, [this]() {
+        if(this->scanner->getScannerState() == ScannerState::STOPPED) {
+            this->scanner->setScannerState(ScannerState::RUNNING);
+        } else {
+            this->scanner->setScannerState(ScannerState::STOPPED);
+        }
+        this->scanner->updateScanner();
+    });
+
     setAlignment(Qt::AlignCenter);
+    this->setupWidgets();
+}
+
+void Footer::clearWidgets() {
+    while (QLayoutItem* item = takeAt(0)) {
+        delete item->widget();
+        delete item;
+    }
+}
+
+void Footer::setupWidgets() {
+    addStretch();
     addWidget(running);
     addStretch();
     addWidget(steps);
@@ -31,6 +69,26 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QHBoxLayout(parent)
     addWidget(numOfPoints);
     addStretch();
     addWidget(time);
+    addStretch();
+    addWidget(scanButton);
+    addStretch();
+    addWidget(cancelButton);
+    addStretch();
+    addWidget(stopButton);
+    addStretch();
+
+    scanButton->hide();
+    cancelButton->hide();
+    stopButton->hide();
+
+    if(scanner->getConnected()) {
+        if(scanner->getScannerState() == ScannerState::RUNNING) {
+            cancelButton->show();
+            stopButton->show();
+        } else {
+            scanButton->show();
+        }
+    }
 }
 
 void Footer::footerUpdated()
@@ -45,12 +103,29 @@ void Footer::footerUpdated()
                         std::chrono::high_resolution_clock::now() - scanner->getStartTime()
                         ).count();
 
-    if (scanner->getScannerState() == RUNNING) {
-        running->setText("Running");
-    } else if (scanner->getScannerState() == STOPPED) {
-        running->setText("Stopped");
+    if(scanner->getConnected()) {
+        if (scanner->getScannerState() == RUNNING) {
+            running->setText("Running");
+            scanButton->hide();
+            cancelButton->show();
+            stopButton->show();
+            stopButton->setText("Stop Scanning");
+        } else if (scanner->getScannerState() == STOPPED) {
+            running->setText("Stopped");
+            scanButton->hide();
+            cancelButton->show();
+            stopButton->show();
+            stopButton->setText("Resume Scanning");
+        } else {
+            running->setText("Finished");
+            scanButton->show();
+            cancelButton->hide();
+            stopButton->hide();
+        }
     } else {
-        running->setText("Finished");
+        scanButton->hide();
+        cancelButton->hide();
+        stopButton->hide();
     }
 
     // Assuming these methods return appropriate values

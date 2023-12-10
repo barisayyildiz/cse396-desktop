@@ -32,6 +32,8 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             QMessageBox msgBox;
             msgBox.setText("Connected to the Scanner!");
             msgBox.exec();
+            this->scanner->setConnected(true);
+            this->scanner->updateScanner();
         } else {
             QMessageBox::critical(this, "Invalid IP Address", "Please enter a valid IP address.");
         }
