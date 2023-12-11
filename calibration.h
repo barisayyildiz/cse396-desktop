@@ -18,7 +18,7 @@ public:
 private:
     Scanner* scanner;
 
-    QGridLayout *layout;
+    QHBoxLayout *layout;
 
     QPoint* topLeft;
     QPoint* topRight;
@@ -29,15 +29,13 @@ private:
 
     QPixmap *calibrationImage;
 
-    QPushButton* startButton;
+    QPushButton* fetchImageButton;
     QPushButton* resetButton;
     QPushButton* submitButton;
 
     QPolygon calibrationPolygon;
 
-    int counter;
-    bool isActive;
-    bool isDrawn;
+    bool isSubmitted;
 
     bool eventFilter(QObject* obj, QEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
