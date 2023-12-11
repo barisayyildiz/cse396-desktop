@@ -19,7 +19,11 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
     imageLabel->setPixmap(*calibrationImage);
     this->layout->addWidget(imageLabel, 0, 0, 1, 4);
 
+
     imageLabel->setContentsMargins(0, 0, 0, 0);
+
+    imageLabel->setFixedSize(calibrationImage->size());
+    imageLabel->setScaledContents(true);
 
     // Install event filter for the image label
     imageLabel->installEventFilter(this);
@@ -75,7 +79,7 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
 
 bool Calibration::eventFilter(QObject* obj, QEvent* event)
 {
-    if (event->type() == QEvent::MouseButtonPress && this->counter != 4 && isActive)
+    if (event->type() == QEvent::MouseButtonPress && this->counter != 4)
     {
         QLabel* imageLabel = qobject_cast<QLabel*>(obj);
         if (imageLabel) {
@@ -139,19 +143,8 @@ void Calibration::paintEvent(QPaintEvent* event)
         painter.setRenderHint(QPainter::Antialiasing, true);
         painter.setPen(QColor(Qt::green));
 
-        // Convert widget coordinates to pixmap coordinates
-        QPolygonF pixmapPolygon;
-        for (const auto& point : calibrationPolygon) {
-            QPointF pixmapPoint = imageLabel->mapFrom(this, point);
-            pixmapPolygon << pixmapPoint;
-        }
-
-        // Draw the polygon and lines on the pixmap
-        painter.drawPolygon(pixmapPolygon);
-        painter.drawLine(pixmapPolygon[0], pixmapPolygon[1]);
-        painter.drawLine(pixmapPolygon[1], pixmapPolygon[2]);
-        painter.drawLine(pixmapPolygon[2], pixmapPolygon[3]);
-        painter.drawLine(pixmapPolygon[3], pixmapPolygon[0]);
+        // Draw the polygon on the pixmap
+        painter.drawPolygon(calibrationPolygon);
 
         // Create a painter for the original image
         QPainter originalPainter(&originalImage);
