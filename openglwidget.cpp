@@ -46,7 +46,7 @@ void OpenGLWidget::initializeGL()
 
     emit modelUploaded();
 
-    std::vector<std::string> paths{ "res/textures/floor.jpg", "res/textures/flower-design.jpg", "res/textures/grass.jpg", "res/textures/wood.jpg" };
+    std::vector<std::string> paths{ "res/textures/floor.jpg", "res/textures/flower-design.jpg", "res/textures/grass.jpg", "res/textures/wood.jpg", "res/textures/flag.jpg" };
 
     for (auto path : paths)
     {

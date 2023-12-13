@@ -21,10 +21,8 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QHBoxLayout(parent)
 
     scanButton->setStyleSheet("padding: 10px; margin: 10px;");
     cancelButton->setStyleSheet("padding: 10px; margin: 10px;");
-    stopButton->setStyleSheet("padding: 10px; margin: 10px;");
     scanButton->setText("Start Scanning");
     cancelButton->setText("Cancel Scanning");
-    stopButton->setText("Stop Scanning");
 
     connect(scanButton, &QPushButton::clicked, [this]() {
         this->scanner->setScannerState(ScannerState::RUNNING);
@@ -33,15 +31,6 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QHBoxLayout(parent)
 
     connect(cancelButton, &QPushButton::clicked, [this]() {
         this->scanner->setScannerState(ScannerState::FINISHED);
-        this->scanner->updateScanner();
-    });
-
-    connect(stopButton, &QPushButton::clicked, [this]() {
-        if(this->scanner->getScannerState() == ScannerState::STOPPED) {
-            this->scanner->setScannerState(ScannerState::RUNNING);
-        } else {
-            this->scanner->setScannerState(ScannerState::STOPPED);
-        }
         this->scanner->updateScanner();
     });
 
@@ -74,17 +63,13 @@ void Footer::setupWidgets() {
     addStretch();
     addWidget(cancelButton);
     addStretch();
-    addWidget(stopButton);
-    addStretch();
 
     scanButton->hide();
     cancelButton->hide();
-    stopButton->hide();
 
     if(scanner->getConnected()) {
         if(scanner->getScannerState() == ScannerState::RUNNING) {
             cancelButton->show();
-            stopButton->show();
         } else {
             scanButton->show();
         }
@@ -108,24 +93,14 @@ void Footer::footerUpdated()
             running->setText("Running");
             scanButton->hide();
             cancelButton->show();
-            stopButton->show();
-            stopButton->setText("Stop Scanning");
-        } else if (scanner->getScannerState() == STOPPED) {
-            running->setText("Stopped");
-            scanButton->hide();
-            cancelButton->show();
-            stopButton->show();
-            stopButton->setText("Resume Scanning");
         } else {
             running->setText("Finished");
             scanButton->show();
             cancelButton->hide();
-            stopButton->hide();
         }
     } else {
         scanButton->hide();
         cancelButton->hide();
-        stopButton->hide();
     }
 
     // Assuming these methods return appropriate values
