@@ -36,9 +36,10 @@ public:
 
     bool ExportModel(std::string filePath, ExportFormat exportFormat);
 
-    int getTotalNumberOfMeshes() { return totalNumOfMeshes; }
-    int getTotalNumberOfFaces() { return totalNumOfFaces; }
-    int getTotalNumberOfNodes() { return totalNumOfNodes; }
+    u_int getTotalNumberOfMeshes() { return this->totalNumOfMeshes; }
+    u_int getTotalNumberOfVertices() { return this->totalNumOfVertices; }
+    u_int getTotalNumberOfFaces() { return this->totalNumOfFaces; }
+    u_int getTotalNumberOfNodes() { return this->totalNumOfNodes; }
 
 protected:
 	std::vector<Mesh> m_meshes;
@@ -58,6 +59,7 @@ private:
 	std::size_t m_numMats;
 
     u_int totalNumOfMeshes = 0;
+    u_int totalNumOfVertices = 0;
     u_int totalNumOfFaces = 0;
     u_int totalNumOfNodes = 0;
 };

@@ -1,6 +1,7 @@
 #ifndef H_OPENGLWIDGET
 #define H_OPENGLWIDGET
 
+#include <QObject>
 #include <QOpenGLWidget>
 #include <qopenglfunctions_4_3_core.h>
 
@@ -32,6 +33,7 @@ protected:
 
 signals:
     void initialized();
+    void modelUploaded();
 
 public slots:
     void SetBackgroundColor(QColor bgColor)

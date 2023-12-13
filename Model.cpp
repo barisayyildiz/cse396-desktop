@@ -17,11 +17,11 @@ Model::Model(const std::string Path, const std::string Name)
     if (!loadModel(Path))
 	{
 		std::cerr << "Failed to load: " << Name << '\n';
-	}
+    }
 }
 
 void Model::AttachMesh(const Mesh mesh) noexcept {
-	m_meshes.push_back(mesh);
+    m_meshes.push_back(mesh);
 }
 
 void Model::Delete() {
@@ -88,7 +88,7 @@ bool Model::loadModel(const std::string Path) {
 	m_path = Path.substr(0, Path.find_last_of('/')); // Strip the model file name and keep the model folder.
 	m_path += "/";
 
-	//importer.FreeScene();
+    //importer.FreeScene();
 	return true;
 }
 
@@ -105,13 +105,13 @@ void Model::processNode(aiNode* node, const aiScene* scene) {
 	// Process their children via recursive tree traversal
 	for (auto i = 0; i < node->mNumChildren; ++i) {
         processNode(node->mChildren[i], scene);
-	}
+    }
 }
 
 Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 {
 	std::vector<Vertex> vertices;
-    this->totalNumOfMeshes = mesh->mNumVertices;
+    this->totalNumOfVertices = mesh->mNumVertices;
     this->totalNumOfFaces = mesh->mNumFaces;
 
 

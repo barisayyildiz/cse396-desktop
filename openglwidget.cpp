@@ -44,6 +44,8 @@ void OpenGLWidget::initializeGL()
     shader = new Shader("res/shaders/shader.vs", "res/shaders/shader.ps");
     model = new Model("res/models/3d.obj", "New Model");
 
+    emit modelUploaded();
+
     std::vector<std::string> paths{ "res/textures/floor.jpg", "res/textures/flower-design.jpg", "res/textures/grass.jpg", "res/textures/wood.jpg" };
 
     for (auto path : paths)

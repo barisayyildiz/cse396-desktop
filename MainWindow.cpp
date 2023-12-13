@@ -42,6 +42,8 @@
 #include <signal.h>
 #include <cstdlib>
 
+#include "qopenglwidget.h"
+
 #define DATA_PORT 5000
 #define CONFIG_PORT 4000
 
@@ -297,10 +299,6 @@ MainWindow::MainWindow(QWidget *parent)
     headerItem->setFont(font);
     ui.listWidget->addItem(headerItem);
     ui.listWidget->setSpacing(10);
-    ui.listWidget->addItem(new QListWidgetItem("Additional text"));
-    ui.listWidget->addItem(new QListWidgetItem("Additional text"));
-    ui.listWidget->addItem(new QListWidgetItem("Additional text"));
-    ui.listWidget->addItem(new QListWidgetItem("Additional text"));
 
 	ui.exportBtn->addAction(exportOBJAction);
 	ui.exportBtn->addAction(exportSTLAction);
@@ -337,6 +335,17 @@ MainWindow::MainWindow(QWidget *parent)
 
 	connect(ui.showEdgesBtn, &QPushButton::toggled, ui.openGLWidget, [this](bool checked) {
         ui.openGLWidget->ToggleWireframe();
+    });
+
+    connect(ui.openGLWidget, &OpenGLWidget::modelUploaded , [this]() {
+        QString stats = QString("Total number of nodes: %1").arg(this->ui.openGLWidget->model->getTotalNumberOfNodes());
+        this->ui.listWidget->addItem(stats);
+        stats = QString("Total number of meshes: %1").arg(this->ui.openGLWidget->model->getTotalNumberOfMeshes());
+        this->ui.listWidget->addItem(stats);
+        stats = QString("Total number of vertices: %1").arg(this->ui.openGLWidget->model->getTotalNumberOfVertices());
+        this->ui.listWidget->addItem(stats);
+        stats = QString("Total number of faces: %1").arg(this->ui.openGLWidget->model->getTotalNumberOfFaces());
+        this->ui.listWidget->addItem(stats);
     });
 
     // 2d chart
@@ -382,6 +391,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Now set the fixed size to control the initial size when maximized
     //this->setFixedSize(800, 600);
+
 }
 
 MainWindow::~MainWindow()

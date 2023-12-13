@@ -5,11 +5,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
- //Default camera values
+//Default camera values
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float ZOOM = 5.0f;
-const float DISTANCE = 0.0001f; // Initial distance from the target
+const float DISTANCE = 0.0001f;
 
 class OrbitCamera
 {
