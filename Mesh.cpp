@@ -46,7 +46,4 @@ void Mesh::setupMesh(const std::vector<Vertex>& vertices, const std::vector<unsi
 
 	OPENGLFUNCTIONS->glEnableVertexAttribArray(2);
 	OPENGLFUNCTIONS->glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, vertexSize, reinterpret_cast<void*>(offsetof(Vertex, Normal)));
-
-	OPENGLFUNCTIONS->glEnableVertexAttribArray(3);
-	OPENGLFUNCTIONS->glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, vertexSize, reinterpret_cast<void*>(offsetof(Vertex, Tangent)));
 }

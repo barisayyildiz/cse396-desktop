@@ -1,4 +1,5 @@
-#pragma once
+#ifndef H_OPENGLWIDGET
+#define H_OPENGLWIDGET
 
 #include <QOpenGLWidget>
 #include <qopenglfunctions_4_3_core.h>
@@ -46,14 +47,9 @@ public slots:
     void SetModelTexture(std::string path);
 
 private:
-    std::chrono::steady_clock::time_point startTime;
-
     float lastX;
     float lastY;
 
-    double deltaTime;
-
-    //OrbitCamera camera{ glm::vec3(0.0f, 0.5f, 3.0f) };
     OrbitCamera camera;
 
     QColor backgroundColor;
@@ -69,3 +65,5 @@ public:
 
     glm::mat4 projection;
 };
+
+#endif

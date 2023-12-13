@@ -20,21 +20,9 @@ Model::Model(const std::string Path, const std::string Name)
 	}
 }
 
-Model::Model(const std::string Name, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const MaterialPtr& material) noexcept : m_name(Name) 
-{
-	m_meshes.emplace_back(vertices, indices, material);
-}
-
-
-Model::Model(const std::string Name, const Mesh& mesh) noexcept : m_name(Name) {
-	m_meshes.push_back(mesh);
-}
-
-
 void Model::AttachMesh(const Mesh mesh) noexcept {
 	m_meshes.push_back(mesh);
 }
-
 
 void Model::Delete() {
 	for (auto& mesh : m_meshes) {
@@ -70,13 +58,7 @@ bool Model::ExportModel(std::string filePath, ExportFormat exportFormat)
     return true;
 }
 
-bool Model::loadModel(const std::string Path) {
-#ifdef _DEBUG
-	std::cout << "Loading model: " << m_name << '\n';
-#endif
-
-	std::cout << sizeof(Material) << '\n';
-	
+bool Model::loadModel(const std::string Path) {	
 	const aiScene* pScene{ nullptr };
 
     pScene = m_importer.ReadFile(Path.data(),
@@ -110,25 +92,27 @@ bool Model::loadModel(const std::string Path) {
 	return true;
 }
 
-/***********************************************************************************/
 void Model::processNode(aiNode* node, const aiScene* scene) {
 
 	// Process all node meshes
+    this->totalNumOfMeshes += node->mNumMeshes;
 	for (auto i = 0; i < node->mNumMeshes; ++i) {
 		auto* mesh = scene->mMeshes[node->mMeshes[i]];
         m_meshes.push_back(processMesh(mesh, scene));
 	}
 
+    this->totalNumOfNodes += node->mNumChildren;
 	// Process their children via recursive tree traversal
 	for (auto i = 0; i < node->mNumChildren; ++i) {
         processNode(node->mChildren[i], scene);
 	}
 }
 
-
 Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 {
 	std::vector<Vertex> vertices;
+    this->totalNumOfMeshes = mesh->mNumVertices;
+    this->totalNumOfFaces = mesh->mNumFaces;
 
 
 	for (auto i = 0; i < mesh->mNumVertices; ++i) {
@@ -138,29 +122,19 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 			vertex.Position.x = mesh->mVertices[i].x;
 			vertex.Position.y = mesh->mVertices[i].y;
 			vertex.Position.z = mesh->mVertices[i].z;
-
 		}
 
-		if (mesh->HasNormals()) {
-			vertex.Normal.x = mesh->mNormals[i].x;
-			vertex.Normal.y = mesh->mNormals[i].y;
-			vertex.Normal.z = mesh->mNormals[i].z;
-		}
-
-		if (mesh->HasTangentsAndBitangents()) {
-			vertex.Tangent.x = mesh->mTangents[i].x;
-			vertex.Tangent.y = mesh->mTangents[i].y;
-			vertex.Tangent.z = mesh->mTangents[i].z;
-		}
+        if (mesh->HasNormals()) {
+            vertex.Normal.x = mesh->mNormals[i].x;
+            vertex.Normal.y = mesh->mNormals[i].y;
+            vertex.Normal.z = mesh->mNormals[i].z;
+        }
 
         if (mesh->HasTextureCoords(0)) {
 			// Just take the first set of texture coords (since we could have up to 8)
 			vertex.TexCoords.x = mesh->mTextureCoords[0][i].x;
 			vertex.TexCoords.y = mesh->mTextureCoords[0][i].y;
-		}
-		else {
-			vertex.TexCoords = glm::vec2(0.0f);
-		}
+        }
 
 		vertices.push_back(vertex);
 	}
@@ -174,7 +148,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 		}
 	}
 
-	// Process material
+    // Process material
     // http://assimp.sourceforge.net/lib_html/structai_material.html
     if (mesh->mMaterialIndex >= 0) {
         const auto* mat = scene->mMaterials[mesh->mMaterialIndex];
@@ -184,20 +158,11 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 
         // Get the first texture for each texture type we need
         // since there could be multiple textures per type
-        aiString albedoPath;
-        mat->GetTexture(aiTextureType_DIFFUSE, 0, &albedoPath);
-
         aiString metallicPath;
         mat->GetTexture(aiTextureType_AMBIENT, 0, &metallicPath);
 
         aiString normalPath;
         mat->GetTexture(/*aiTextureType_HEIGHT*/aiTextureType_DIFFUSE, 0, &normalPath);
-
-        aiString roughnessPath;
-        mat->GetTexture(aiTextureType_SHININESS, 0, &roughnessPath);
-
-        aiString alphaMaskPath;
-        mat->GetTexture(aiTextureType_OPACITY, 0, &alphaMaskPath);
 
         auto newMat = Material();
         newMat.Init(name.C_Str(), normalPath.C_Str());

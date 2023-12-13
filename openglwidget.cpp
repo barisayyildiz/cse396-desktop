@@ -22,8 +22,6 @@ OpenGLWidget::OpenGLWidget(QWidget* parent) : QOpenGLWidget (parent)
 {
     this->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 
-    deltaTime = 0.0;
-
     lastX = 0.0f;
     lastY = 0.0f;
 
@@ -37,10 +35,7 @@ void OpenGLWidget::initializeGL()
     //initialize opengl functions
     this->initializeOpenGLFunctions();
 
-    //enable depth testing for 3D
     glEnable(GL_DEPTH_TEST);
-
-    startTime = std::chrono::steady_clock::now();
 
     float aspectRatio = width() / (float)height();
 
@@ -64,17 +59,6 @@ void OpenGLWidget::initializeGL()
 
 void OpenGLWidget::paintGL()
 {
-
-    //get current time
-    auto currentTime = std::chrono::steady_clock::now();
-
-    /*
-     *  calculate delta time
-     *
-     *  delta time is time between two frames in milliseconds
-    */
-    deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
-
     //set the background color
     glClearColor(backgroundColor.redF(), backgroundColor.greenF(), backgroundColor.blueF(), 1.0f);
 
@@ -89,10 +73,7 @@ void OpenGLWidget::paintGL()
     shader->Use();
 
     glm::mat4 modelMat = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-    /*glm::mat4 modelMat = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-    //glm::mat4 modelMat = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
 
-    shader->SetMat4("modelMatrix", modelMat);*/
     // Set matrices
     shader->SetMat4("projection", projection);
     shader->SetMat4("view", camera.GetViewMatrix());
@@ -122,8 +103,6 @@ void OpenGLWidget::paintGL()
 
     //Qt update
     update();
-
-    startTime = currentTime;
 }
 
 void OpenGLWidget::resizeGL(int w, int h)

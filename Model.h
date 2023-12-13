@@ -1,4 +1,5 @@
-#pragma once
+#ifndef H_MODEL
+#define H_MODEL
 
 #include <glm/mat4x4.hpp>
 
@@ -22,11 +23,7 @@ struct aiMesh;
 
 class Model {
 public:
-	Model() = default;
     Model(const std::string Path, const std::string Name);
-	Model(const std::string Name, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const MaterialPtr& material) noexcept;
-	Model(const std::string Name, const Mesh& mesh) noexcept;
-	virtual ~Model() = default;
 
 	void AttachMesh(const Mesh mesh) noexcept;
 
@@ -38,6 +35,10 @@ public:
 	void SetMeshTexture(int meshIndex, std::string texturePath);
 
     bool ExportModel(std::string filePath, ExportFormat exportFormat);
+
+    int getTotalNumberOfMeshes() { return totalNumOfMeshes; }
+    int getTotalNumberOfFaces() { return totalNumOfFaces; }
+    int getTotalNumberOfNodes() { return totalNumOfNodes; }
 
 protected:
 	std::vector<Mesh> m_meshes;
@@ -55,6 +56,12 @@ private:
 	std::string m_path;
 
 	std::size_t m_numMats;
+
+    u_int totalNumOfMeshes = 0;
+    u_int totalNumOfFaces = 0;
+    u_int totalNumOfNodes = 0;
 };
 
 using ModelPtr = std::shared_ptr<Model>;
+
+#endif

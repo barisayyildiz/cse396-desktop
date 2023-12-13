@@ -33,14 +33,6 @@ public:
 	unsigned int GetParameterTexture(const ParameterType parameter) const noexcept;
 	glm::vec3 GetParameterColor(const ParameterType parameter) const noexcept;
 
-	auto GetAlphaValue() const noexcept {
-		return m_alpha;
-	}
-
-	auto GetAlphaMask() const noexcept {
-		return m_alphaMaskTexture;
-	}
-
 	static unsigned int LoadTexture(char const* path);
 
 private:

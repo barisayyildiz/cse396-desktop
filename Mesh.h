@@ -1,4 +1,5 @@
-#pragma once
+#ifndef H_MESH
+#define H_MESH
 
 #include "Material.h"
 
@@ -17,9 +18,7 @@ class Mesh {
 public:
 
 	Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
-	Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const MaterialPtr& material);
-
-	auto GetTriangleCount() const noexcept { return IndexCount / 3; }
+    Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const MaterialPtr& material);
 
 	const std::size_t IndexCount;
 	unsigned int VAO;
@@ -28,3 +27,5 @@ public:
 private:
 	void setupMesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
 };
+
+#endif

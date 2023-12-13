@@ -1,4 +1,5 @@
-#pragma once
+#ifndef H_MAINWINDOW
+#define H_MAINWINDOW
 
 #include <QMainWindow>
 #include "ui_MainWindow.h"
@@ -14,3 +15,5 @@ public:
 private:
 	Ui::MainWindowClass ui;
 };
+
+#endif
