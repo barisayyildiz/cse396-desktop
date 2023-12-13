@@ -129,6 +129,7 @@ int readData(int& serverSocket, ScannedPoints* scannedPoints, PointCloud* pointC
 
     scanner->setScannerState(ScannerState::RUNNING);
     scanner->updateScanner();
+    scanner->setConnected(true);
 
     scanner->startTimer();
 

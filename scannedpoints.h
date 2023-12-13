@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QtCharts>
+#include <QVector>
 
 class ScannedPoints : public QChartView
 {
@@ -16,7 +17,8 @@ public:
 
 private:
     QChart* chart_;
-    QLineSeries* series_;
+    QSplineSeries* series_;
+    QVector<int>* recentPoints;
 
 };
 

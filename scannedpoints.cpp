@@ -1,6 +1,9 @@
 #include "scannedpoints.h"
+#include <limits.h>
 
 #include <QtCharts>
+#include <QPropertyAnimation>
+#include <QEasingCurve>
 
 ScannedPoints::ScannedPoints(QWidget *parent)
     : QChartView(parent)
@@ -9,7 +12,8 @@ ScannedPoints::ScannedPoints(QWidget *parent)
     this->setChart(chart_);
 
     // Create a QLineSeries and add it to the chart.
-    series_ = new QLineSeries();
+    series_ = new QSplineSeries();
+    recentPoints = new QVector<int>();
 
     chart_->addSeries(series_);
     chart_->setTitle("Number of scanned points");
@@ -52,12 +56,24 @@ ScannedPoints::ScannedPoints(QWidget *parent)
 void ScannedPoints::addNewDataPoint(double y) {
     // Add a new data point to the series.
     series_->append(++stepCounter, y);
-    if(y > yMax) {
-        yMax = y;
+    recentPoints->push_back(y);
+    if(recentPoints->size() > 10) {
+        recentPoints->removeFirst();
+    }
+
+    int maxVal = INT_MIN;
+    int minVal = INT_MAX;
+    for(int i=0; i<recentPoints->size(); i++) {
+        if(recentPoints->at(i) > maxVal) {
+            maxVal = recentPoints->at(i);
+        }
+        if(recentPoints->at(i) < minVal) {
+            minVal = recentPoints->at(i);
+        }
     }
     QAbstractAxis *xAxis = chart_->axisX();
     xAxis->setRange(stepCounter + 1 - 10, stepCounter + 1);
 
     QAbstractAxis *yAxis = chart_->axisY();
-    yAxis->setRange(0, yMax + 1);
+    yAxis->setRange(minVal - 10, maxVal + 10);
 }
