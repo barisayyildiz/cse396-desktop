@@ -5,8 +5,11 @@
 #include "footer.h"
 #include "scanner.h"
 
-Footer::Footer(Scanner* scanner, QWidget *parent): QHBoxLayout(parent)
+Footer::Footer(Scanner* scanner, QWidget *parent): QWidget(parent)
 {
+    this->layout = new QVBoxLayout();
+    this->statsLayout = new QHBoxLayout();
+    this->progressBarLayout = new QHBoxLayout();
     this->scanner = scanner;
     if(scanner->getScannerState() == ScannerState::RUNNING) {
         running->setText("Running");
@@ -23,6 +26,20 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QHBoxLayout(parent)
     button->setText("Start");
     button->setEnabled(false);
 
+    progressBar->setRange(0, 100);
+    progressBar->setStyleSheet(
+        "QProgressBar {"
+        "    border: 1px solid #19749B;"
+        "    border-radius: 5px;"
+        "    background-color: #1C1C1C;"
+        "    text-align: center;" // Center align the text in the progress bar
+        "}"
+        "QProgressBar::chunk {"
+        "    background-color: #33C2FF;"
+        "    width: 10px;"
+        "}"
+        );
+
     connect(button, &QPushButton::clicked, [this] {
         this->button->setEnabled(true);
         if(this->scanner->getScannerState() == ScannerState::RUNNING) {
@@ -35,33 +52,37 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QHBoxLayout(parent)
         this->scanner->updateScanner();
     });
 
-    setAlignment(Qt::AlignCenter);
+    this->layout->addLayout(this->statsLayout);
+    this->layout->addLayout(this->progressBarLayout);
+    this->statsLayout->setAlignment(Qt::AlignCenter);
+    this->setLayout(layout);
     this->setupWidgets();
 }
 
 void Footer::clearWidgets() {
-    while (QLayoutItem* item = takeAt(0)) {
+    while (QLayoutItem* item = this->statsLayout->takeAt(0)) {
         delete item->widget();
         delete item;
     }
 }
 
 void Footer::setupWidgets() {
-    addStretch();
-    addWidget(running);
-    addStretch();
-    addWidget(steps);
-    addStretch();
-    addWidget(percentage);
-    addStretch();
-    addWidget(degree);
-    addStretch();
-    addWidget(numOfPoints);
-    addStretch();
-    addWidget(time);
-    addStretch();
-    addWidget(button);
-    addStretch();
+    this->statsLayout->addStretch();
+    this->statsLayout->addWidget(running);
+    this->statsLayout->addStretch();
+    this->statsLayout->addWidget(steps);
+    this->statsLayout->addStretch();
+    this->statsLayout->addWidget(percentage);
+    this->statsLayout->addStretch();
+    this->statsLayout->addWidget(degree);
+    this->statsLayout->addStretch();
+    this->statsLayout->addWidget(numOfPoints);
+    this->statsLayout->addStretch();
+    this->statsLayout->addWidget(time);
+    this->statsLayout->addStretch();
+    this->statsLayout->addWidget(button);
+    this->statsLayout->addStretch();
+    this->progressBarLayout->addWidget(progressBar);
 }
 
 void Footer::footerUpdated()
@@ -89,6 +110,8 @@ void Footer::footerUpdated()
     } else {
         this->button->setEnabled(false);
     }
+
+    progressBar->setValue((static_cast<double>(currentStep) / horizontalPrecision) * 100);
 
     // Assuming these methods return appropriate values
     steps->setText(QString("%1 steps out of %2").arg(currentStep).arg(horizontalPrecision));

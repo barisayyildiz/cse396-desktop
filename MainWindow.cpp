@@ -356,7 +356,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui.chartsVLayout->addWidget(scannedPoints);
 
     Footer* footer = new Footer(scanner);
-    ui.chartsVLayout->addLayout(footer);
+    ui.chartsVLayout->addWidget(footer);
 
     QObject::connect(scanner, &Scanner::updateScannerSignal, footer, &Footer::footerUpdated);
 

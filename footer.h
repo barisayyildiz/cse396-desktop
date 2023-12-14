@@ -3,9 +3,11 @@
 
 #include <QLabel>
 #include <QPushButton>
+#include <QProgressBar>
+#include <QVBoxLayout>
 #include "scanner.h"
 
-class Footer: public QHBoxLayout
+class Footer: public QWidget
 {
     public:
         Footer(Scanner* scanner, QWidget* parent = nullptr);
@@ -18,6 +20,10 @@ class Footer: public QHBoxLayout
         QLabel *numOfPoints = new QLabel();
         QLabel *time = new QLabel();
         QPushButton *button = new QPushButton();
+        QProgressBar *progressBar = new QProgressBar();
+        QVBoxLayout *layout = new QVBoxLayout();
+        QHBoxLayout *statsLayout = new QHBoxLayout();
+        QHBoxLayout *progressBarLayout = new QHBoxLayout();
         void setupWidgets();
         void clearWidgets();
     public slots:
