@@ -14,7 +14,13 @@ public:
 
         // Define a list of texture paths to fill the grid.
         std::vector<std::string> texturePaths = {
-            "res/textures/floor.jpg", "res/textures/flower-design.jpg", "res/textures/grass.jpg", "res/textures/wood.jpg", "res/textures/flag.jpg"
+            "res/textures/floor.jpg",
+            "res/textures/flower-design.jpg",
+            "res/textures/grass.jpg",
+            "res/textures/wood.jpg",
+            "res/textures/flag.jpg",
+            "res/textures/vercetti.png",
+            "res/textures/gs.jpg"
         };
 
         // Create buttons for textures in a 5 columns x 3 rows grid.

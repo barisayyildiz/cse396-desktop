@@ -46,14 +46,22 @@ void OpenGLWidget::initializeGL()
 
     emit modelUploaded();
 
-    std::vector<std::string> paths{ "res/textures/floor.jpg", "res/textures/flower-design.jpg", "res/textures/grass.jpg", "res/textures/wood.jpg", "res/textures/flag.jpg" };
+    std::vector<std::string> paths{
+                                   "res/textures/floor.jpg",
+                                    "res/textures/flower-design.jpg",
+                                    "res/textures/grass.jpg",
+                                    "res/textures/wood.jpg",
+                                    "res/textures/flag.jpg",
+                                    "res/textures/vercetti.png",
+                                    "res/textures/gs.jpg"
+    };
 
     for (auto path : paths)
     {
         mapTexture[path] = Material::LoadTexture(path.c_str());
     }
 
-    model->SetMeshTexture(0, "res/models/alliance.png");
+    model->SetMeshTexture(0, "res/textures/vercetti.png");
 
     //signal that everything is initialize, now we can fill the animation list on GUI
     emit initialized();
@@ -82,9 +90,19 @@ void OpenGLWidget::paintGL()
     shader->SetMat4("modelMatrix", modelMat);
 
     // Set light properties
+    /*shader->SetVec3("light.direction", glm::vec3(1.0f, -1.0f, -1.0f));  // Directional light from the top-left
+    shader->SetVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+    shader->SetVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));*/
+
+    // Set light properties for the first light
     shader->SetVec3("light.direction", glm::vec3(1.0f, -1.0f, -1.0f));  // Directional light from the top-left
     shader->SetVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
     shader->SetVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+
+    // Set light properties for the second light (opposite direction)
+    shader->SetVec3("lightDirection2", glm::vec3(-1.0f, 1.0f, 1.0f));  // Directional light from the bottom-right
+    shader->SetVec3("lightAmbient2", glm::vec3(0.2f, 0.2f, 0.2f));
+    shader->SetVec3("lightDiffuse2", glm::vec3(0.5f, 0.5f, 0.5f));
 
     const auto& meshes{ model->GetMeshes() };
 
