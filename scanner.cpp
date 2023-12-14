@@ -7,7 +7,7 @@ Scanner::Scanner()
 {
     scannerState = ScannerState::FINISHED;
     horizontalPrecision = 256;
-    verticalPrecision = 455;
+    verticalPrecision = 100;
     currentStep = 0;
     numberOfPointsScanned = 0;
     this->connected = false;

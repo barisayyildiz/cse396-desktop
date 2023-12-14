@@ -276,7 +276,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(exportOBJAction, &QAction::triggered, [=]() {
         QString fileName = QFileDialog::getSaveFileName(this,
                                                         "Save File",
-                                                        QDir::homePath(),  // Starting directory
+                                                        ui.fileNameLabel->text(),  // Starting directory
                                                         "OBJ Files (*.obj)",
                                                         nullptr,
                                                         QFileDialog::DontUseNativeDialog);
@@ -286,10 +286,11 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(exportSTLAction, &QAction::triggered, [=]() {
         QString fileName = QFileDialog::getSaveFileName(this,
                                                         "Save File",
-                                                        QDir::homePath(),  // Starting directory
+                                                        ui.fileNameLabel->text(),  // Starting directory
                                                         "STL Files (*.stl)",
                                                         nullptr,
                                                         QFileDialog::DontUseNativeDialog);
+        fileName = fileName.isEmpty() ? QDir::homePath() + "/" + "defaultFileName" : fileName;
         ui.openGLWidget->model->ExportModel(fileName.toStdString(), ExportFormat::STL);
     });
 
@@ -305,7 +306,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // sliders
     ui.verticalSlider->setValue(scanner->getVerticalPrecision());
-    ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()));
+    ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()) + "%");
     ui.horizontalSlider->setValue(scanner->getHorizontalPrecision());
     ui.horizontalPrecisionLabel->setText(QString::number(scanner->getHorizontalPrecision()));
 
@@ -322,7 +323,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui.verticalSlider, &QSlider::valueChanged, scanner, [this, scanner](int value) {
         qDebug() << value;
         scanner->setVerticalPrecision(value);
-        ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()));
+        ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()) + "%");
     });
 
 	connect(ui.exportBtn, &QToolButton::clicked, [this]() {
