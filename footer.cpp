@@ -14,7 +14,7 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QWidget(parent)
     if(scanner->getScannerState() == ScannerState::RUNNING) {
         running->setText("Running");
     } else {
-        running->setText("Stopped");
+        running->setText("Idle");
     }
     steps->setText(QString("0 steps out of %1").arg(scanner->getHorizontalPrecision()));
     degree->setText("0.0 degree");
@@ -32,7 +32,7 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QWidget(parent)
         "    border: 1px solid #19749B;"
         "    border-radius: 5px;"
         "    background-color: #1C1C1C;"
-        "    text-align: center;" // Center align the text in the progress bar
+        "    text-align: center;"
         "}"
         "QProgressBar::chunk {"
         "    background-color: #33C2FF;"
@@ -47,7 +47,7 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QWidget(parent)
             this->button->setText("Start");
         } else {
             this->scanner->setScannerState(ScannerState::RUNNING);
-            this->button->setText("Stop");
+            this->button->setText("Cancel");
         }
         this->scanner->updateScanner();
     });
@@ -101,7 +101,7 @@ void Footer::footerUpdated()
         this->button->setEnabled(true);
         if (scanner->getScannerState() == RUNNING) {
             running->setText("Running");
-            this->button->setText("Stop");
+            this->button->setText("Cancel");
 
         } else {
             running->setText("Finished");

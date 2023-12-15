@@ -20,8 +20,8 @@ public:
     void startTimer();
     void stopTimer();
     void resetTimer();
-    QPoint* getTopLeftPoint() {return new QPoint(277.0, 90.0);}
-    QPoint* getBottomRightPoint () {return new QPoint(733.0, 634.0);}
+    QPoint* getTopLeftPoint() {return new QPoint(340.0, 244.0);}
+    QPoint* getBottomRightPoint () {return new QPoint(611.0, 747.0);}
 public:
     ScannerState getScannerState();
     int getHorizontalPrecision();
