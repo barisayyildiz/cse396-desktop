@@ -351,8 +351,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 2d chart
     ScannedPoints *scannedPoints = new ScannedPoints();
-    scannedPoints->addNewDataPoint(10);
-    scannedPoints->addNewDataPoint(20);
     ui.chartsVLayout->addWidget(scannedPoints);
 
     Footer* footer = new Footer(scanner);
