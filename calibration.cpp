@@ -82,6 +82,39 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
 
 bool Calibration::eventFilter(QObject* obj, QEvent* event)
 {
+    if (calibrationPolygon.size() == 4) {
+        if (event->type() == QEvent::MouseButtonPress) {
+            QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+            if (mouseEvent->button() == Qt::LeftButton && calibrationPolygon.boundingRect().contains(mouseEvent->pos())) {
+                isDragging = true;
+                dragStartPos = mouseEvent->pos();
+                originalRect = calibrationPolygon.boundingRect();
+            }
+        } else if (event->type() == QEvent::MouseMove && isDragging) {
+            QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+            QPointF delta = mouseEvent->pos() - dragStartPos;
+
+            // Check if any point after translation would go outside the image bounds
+            bool anyPointOutOfBounds = false;
+            for (const QPoint& point : calibrationPolygon) {
+                QPoint updatedPoint = point + delta.toPoint();
+                if (updatedPoint.x() < 0 || updatedPoint.x() >= 1024 || updatedPoint.y() < 0 || updatedPoint.y() >= 768) {
+                    anyPointOutOfBounds = true;
+                    break;
+                }
+            }
+
+            if (!anyPointOutOfBounds) {
+                calibrationPolygon.translate(delta.toPoint());
+                dragStartPos = mouseEvent->pos();
+                qDebug() << calibrationPolygon;
+                this->update();
+            }
+        } else if (event->type() == QEvent::MouseButtonRelease && isDragging) {
+            isDragging = false;
+        }
+    }
+
     if (event->type() == QEvent::MouseButtonPress && calibrationPolygon.size() != 4)
     {
         QLabel* imageLabel = qobject_cast<QLabel*>(obj);
