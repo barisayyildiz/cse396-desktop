@@ -2,8 +2,17 @@
 #include <QHBoxLayout>
 #include <chrono>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <thread>
+
+#include "global.h"
 #include "footer.h"
 #include "scanner.h"
+#include "communication.h"
 
 Footer::Footer(Scanner* scanner, QWidget *parent): QWidget(parent)
 {
@@ -45,9 +54,19 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QWidget(parent)
         if(this->scanner->getScannerState() == ScannerState::RUNNING) {
             this->scanner->setScannerState(ScannerState::STOPPED);
             this->button->setText("Start");
+            Communication::sendConfig("cancel");
         } else {
+            char buffer[BUFFER_SIZE];
+            memset(buffer, '\0', BUFFER_SIZE);
+            sprintf(buffer, "START");
+
+            send(clientSocket, buffer, BUFFER_SIZE, 0);
+
             this->scanner->setScannerState(ScannerState::RUNNING);
             this->button->setText("Cancel");
+
+            std::thread t1(Communication::readData);
+            t1.detach();
         }
         this->scanner->updateScanner();
     });
@@ -92,7 +111,6 @@ void Footer::footerUpdated()
     int horizontalPrecision = scanner->getHorizontalPrecision();
     int verticalPrecision = scanner->getVerticalPrecision();
     int numberOfPointsScanned = scanner->getNumberOfPointsScanned();
-    qDebug() << numberOfPointsScanned;
     auto duration = std::chrono::duration<double>(
                         std::chrono::high_resolution_clock::now() - scanner->getStartTime()
                         ).count();

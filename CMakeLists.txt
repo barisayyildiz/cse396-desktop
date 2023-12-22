@@ -36,6 +36,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         capturedimages.h capturedimages.cpp
         calibration.h calibration.cpp
         connection.h connection.cpp
+        communication.h communication.cpp
 
 
         )

@@ -6,5 +6,11 @@
 
 #define OPENGLFUNCTIONS QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_3_Core>(QOpenGLContext::currentContext())
 
+#define DATA_PORT 5000
+#define CONFIG_PORT 4000
+
+#define BUFFER_SIZE 1024
+
+extern int clientSocket;
 
 #endif // GLOBAL_H

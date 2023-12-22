@@ -26,6 +26,9 @@
 // connection
 #include "connection.h"
 
+// communication
+#include "communication.h"
+
 // communication and multithreading
 #include <iostream>
 #include <stdlib.h>
@@ -43,15 +46,16 @@
 #include <cstdlib>
 
 #include "qopenglwidget.h"
+#include "global.h"
 
-#define DATA_PORT 5000
-#define CONFIG_PORT 4000
+#include "communication.h"
 
-#define BUFFER_SIZE 1024
-
+/*
 int dataSocket;
 int configSocket;
+*/
 
+/*
 void signalCallbackHandler(int signum) {
     std::cout << "Caught signal " << signum << std::endl;
     close(dataSocket);
@@ -59,7 +63,7 @@ void signalCallbackHandler(int signum) {
     exit(signum);
 }
 
-int sendConfig() {
+int sendConfig(int horizontalPrecision, int verticalPrecision) {
     qDebug() << "Gonna send some configurations";
     configSocket = socket(AF_INET, SOCK_STREAM, 0);
     if(configSocket == -1) {
@@ -78,14 +82,138 @@ int sendConfig() {
         return 1;
     }
 
-    // Send data to the server
-    std::string dataToSend = "configurations changed...";
-    if (send(configSocket, dataToSend.c_str(), dataToSend.size(), 0) == -1) {
-        std::cerr << "Error sending data." << std::endl;
-        return 1;
-    }
+    char buffer[BUFFER_SIZE];
+    memset(buffer, '\0', BUFFER_SIZE);
+
+    sprintf(buffer, "precision %d %d", horizontalPrecision, verticalPrecision);
+    qDebug() << buffer;
+    send(configSocket, buffer, BUFFER_SIZE, 0);
 
     close(configSocket);
+}
+*/
+
+void readData(ScannedPoints* scannedPoints, PointCloud* pointCloud, Scanner* scanner) {
+    scanner->startTimer();
+    char buffer[BUFFER_SIZE];
+
+    while (true) {
+        // Accept incoming connections
+        qDebug() << "accepting...";
+
+        memset(buffer, '\0', BUFFER_SIZE);
+        sprintf(buffer, "%s", "OK");
+        send(clientSocket, buffer, sizeof(buffer), 0);
+
+        memset(buffer, '\0', BUFFER_SIZE);
+        int bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (bytesRead == -1) {
+            qDebug() << "Error receiving data.";
+            close(clientSocket);
+            break;
+        }
+
+        if(strcmp(buffer, "FINISHED") == 0) {
+            close(clientSocket);
+            break;
+        }
+
+        char* token;
+        token = strtok(buffer, " ");
+
+        //qDebug() << "token: " << token;
+        int round = atoi(token);
+        qDebug() << "currentStep: " << round;
+        scanner->setCurrentStep(round);
+        token = strtok(nullptr, " ");
+        scanner->setHorizontalPrecision(atoi(token));
+        //qDebug() << "round number: " << round;
+
+        memset(buffer, '\0', BUFFER_SIZE);
+        bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (bytesRead == -1) {
+            qDebug() << "Error receiving data.";
+            close(clientSocket);
+            break;
+        }
+
+        int numOfScannedPoints = atoi(buffer);
+        //qDebug() << "number of scanned points : " << numOfScannedPoints;
+
+        scannedPoints->addNewDataPoint(numOfScannedPoints);
+        scanner->setNumberOfPointsScanned(scanner->getNumberOfPointsScanned() + numOfScannedPoints);
+
+        /*ScannerState scannerState;
+        int verticalPrecision;
+        int numberOfPointsScanned;*/
+
+        for(int i=0; i<numOfScannedPoints; i++) {
+            memset(buffer, '\0', BUFFER_SIZE);
+            recv(clientSocket, buffer, sizeof(buffer), 0);
+            send(clientSocket, buffer, sizeof(buffer), 0);
+            //qDebug() << "buffer: " << buffer;
+
+            //qDebug() << buffer;
+            double x, y, z;
+
+            QTextStream stream(buffer);
+            stream >> x >> y >> z;
+
+            //std::cout << "x: " << x << ", y: " << y << ", z: " << z << std::endl;
+            //qDebug() << "x: " << x << ", y: " << y << ", z: " << z;
+            pointCloud->addNewDataPoint(x, y, z);
+        }
+
+        int imgSize;
+        recv(clientSocket, &imgSize, sizeof(int), 0);
+        qDebug() << "imgSize: " << imgSize;
+
+        std::string save_path = "received_files/original/" + std::to_string(round-1) + ".jpg";
+        int fileDescriptor = open(save_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        for (int i = 0; i < imgSize; i += BUFFER_SIZE) {
+            int remaining = std::min(BUFFER_SIZE, imgSize - i);
+            memset(buffer, '\0', BUFFER_SIZE);
+            recv(clientSocket, buffer, remaining, 0);
+
+            // Write the received data to the file
+            write(fileDescriptor, buffer, remaining);
+
+            send(clientSocket, buffer, sizeof(buffer), 0);
+        }
+        // Close the file and socket
+        close(fileDescriptor);
+
+        imgSize;
+        recv(clientSocket, &imgSize, sizeof(int), 0);
+        qDebug() << "imgSize: " << imgSize;
+
+        save_path = "received_files/final/" + std::to_string(round-1) + ".jpg";
+        fileDescriptor = open(save_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        for (int i = 0; i < imgSize; i += BUFFER_SIZE) {
+            int remaining = std::min(BUFFER_SIZE, imgSize - i);
+            memset(buffer, '\0', BUFFER_SIZE);
+            recv(clientSocket, buffer, remaining, 0);
+
+            // Write the received data to the file
+            write(fileDescriptor, buffer, remaining);
+
+            send(clientSocket, buffer, sizeof(buffer), 0);
+        }
+        // Close the file and socket
+        close(fileDescriptor);
+
+        if(round%5 == 0) {
+            pointCloud->reRenderGraph();
+        }
+        scanner->updateScanner();
+        //qDebug() << "----------------";
+        //chartView->addNewDataPoint(numOfScannedPoints);
+    }
+    pointCloud->reRenderGraph();
+    qDebug() << "end of readdata thread" ;
+
+    scanner->stopTimer();
+    scanner->updateScanner();
 }
 
 
@@ -321,7 +449,6 @@ MainWindow::MainWindow(QWidget *parent)
         ui.horizontalPrecisionLabel->setText(QString::number(scanner->getHorizontalPrecision()));
     });
     connect(ui.verticalSlider, &QSlider::valueChanged, scanner, [this, scanner](int value) {
-        qDebug() << value;
         scanner->setVerticalPrecision(value);
         ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()) + "%");
     });
@@ -347,6 +474,12 @@ MainWindow::MainWindow(QWidget *parent)
         this->ui.listWidget->addItem(stats);
         stats = QString("Total number of faces: %1").arg(this->ui.openGLWidget->model->getTotalNumberOfFaces());
         this->ui.listWidget->addItem(stats);
+    });
+
+    connect(ui.pushButton, &QPushButton::clicked, [this, horizontalPrecisionValues]() {
+        int horizontalPrecision = horizontalPrecisionValues[ui.horizontalSlider->value()];
+        int verticalPrecision = ui.verticalSlider->value();
+        Communication::sendConfig(horizontalPrecision, verticalPrecision);
     });
 
     // 2d chart
@@ -381,10 +514,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     QObject::connect(scanner, &Scanner::updateScannerSignal, capturedImages, &CapturedImages::capturedImagesUpdated);
 
+    Communication::scannedPoints = scannedPoints;
+    Communication::pointCloud = pointCloud;
+    Communication::scanner = scanner;
+    Communication::openGlWidget = ui.openGLWidget;
 
     // new thread
-    std::thread t1(readData, std::ref(dataSocket), scannedPoints, pointCloud, scanner);
-    t1.detach();
+    /*std::thread t1(readData, std::ref(dataSocket), scannedPoints, pointCloud, scanner);
+    t1.detach();*/
 
     this->showMaximized(); // Maximize the window first
 

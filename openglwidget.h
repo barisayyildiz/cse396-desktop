@@ -66,6 +66,8 @@ public:
     Shader* shader;
 
     glm::mat4 projection;
+
+    void loadModel(const std::string path);
 };
 
 #endif

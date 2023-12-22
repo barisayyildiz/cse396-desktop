@@ -1,4 +1,13 @@
 #include "connection.h"
+#include "global.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+int clientSocket;
 
 Connection::Connection(Scanner *scanner, QWidget *parent)
     : QWidget{parent}
@@ -24,7 +33,7 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
     this->layout->setSpacing(20);
     this->setLayout(this->layout);
 
-    connect(submitButton, &QPushButton::pressed, [this, validator, regEx]() {
+    connect(submitButton, &QPushButton::pressed, [this, validator, regEx, clientSocket]() {
         QString inputText = ipAddressInput->text();
         QRegularExpressionMatch match = regEx.match(inputText, 0, QRegularExpression::PartialPreferCompleteMatch);
         bool hasMatch = match.hasMatch();
@@ -34,6 +43,25 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             msgBox.exec();
             this->scanner->setConnected(true);
             this->scanner->updateScanner();
+
+            // connect to server
+            struct sockaddr_in server_addr;
+
+            // update clientSocket
+            if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+                perror("Socket creation failed");
+                exit(EXIT_FAILURE);
+            }
+
+            qDebug() << "connection: clientSocket: " << clientSocket;
+
+            server_addr.sin_family = AF_INET;
+            server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+            server_addr.sin_port = htons(3000);
+
+            if (::connect(clientSocket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+                perror("Connection failed");
+            }
         } else {
             QMessageBox::critical(this, "Invalid IP Address", "Please enter a valid IP address.");
         }

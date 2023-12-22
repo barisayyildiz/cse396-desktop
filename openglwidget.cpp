@@ -42,7 +42,7 @@ void OpenGLWidget::initializeGL()
     projection = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
 
     shader = new Shader("res/shaders/shader.vs", "res/shaders/shader.ps");
-    model = new Model("res/models/3d.obj", "New Model");
+    model = new Model("received_files/3d.obj", "New Model");
 
     emit modelUploaded();
 
@@ -104,25 +104,27 @@ void OpenGLWidget::paintGL()
     shader->SetVec3("lightAmbient2", glm::vec3(0.2f, 0.2f, 0.2f));
     shader->SetVec3("lightDiffuse2", glm::vec3(0.5f, 0.5f, 0.5f));
 
-    const auto& meshes{ model->GetMeshes() };
+    if(model) {
+        const auto& meshes{ model->GetMeshes() };
 
-    for (const auto& mesh : meshes)
-    {
-        if (!isWireframe)
-            glBindTexture(GL_TEXTURE_2D, mesh.material->GetParameterTexture(Material::NORMAL));
-        else
+        for (const auto& mesh : meshes)
+        {
+            if (!isWireframe)
+                glBindTexture(GL_TEXTURE_2D, mesh.material->GetParameterTexture(Material::NORMAL));
+            else
+                glBindTexture(GL_TEXTURE_2D, 0);
+
+            glActiveTexture(GL_TEXTURE0);
+
+            glBindVertexArray(mesh.VAO);
+
+            glDrawElements(GL_TRIANGLES, mesh.IndexCount, GL_UNSIGNED_INT, nullptr);
             glBindTexture(GL_TEXTURE_2D, 0);
+        }
 
-        glActiveTexture(GL_TEXTURE0);
-
-        glBindVertexArray(mesh.VAO);
-
-        glDrawElements(GL_TRIANGLES, mesh.IndexCount, GL_UNSIGNED_INT, nullptr);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        //Qt update
+        update();
     }
-
-    //Qt update
-    update();
 }
 
 void OpenGLWidget::resizeGL(int w, int h)
@@ -190,4 +192,18 @@ void OpenGLWidget::SetModelTexture(std::string path)
     auto id = mapTexture.at(path);
 
     model->GetMeshes().at(0).material->Set(id);
+}
+
+void OpenGLWidget::loadModel(const std::string path)
+{
+    /*makeCurrent();
+    shader = new Shader("res/shaders/shader.vs", "res/shaders/shader.ps");
+    model = new Model("received_files/3d.obj", "New Model");
+    emit modelUploaded();
+    model->SetMeshTexture(0, "res/textures/vercetti.png");*/
+    //model->Delete();
+    //this->initializeGL();
+    /*model = NULL;
+    model = new Model("received_files/3d.obj", "New Model");*/
+    //model = new Model(path, "New Model");
 }

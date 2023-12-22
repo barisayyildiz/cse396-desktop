@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QMouseEvent> // Add this include for mouse events
 #include <QPainter>
+#include "communication.h"
 
 Calibration::Calibration(Scanner* scanner, QWidget* parent)
     : QWidget{parent}
@@ -72,6 +73,7 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
             QMessageBox msgBox;
             msgBox.setText("Scanner calibrations have been updated");
             msgBox.exec();
+            Communication::sendConfig(this->calibrationPolygon);
         }
     });
 
