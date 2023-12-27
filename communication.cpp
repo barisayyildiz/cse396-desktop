@@ -43,12 +43,23 @@ void Communication::readData()
     char buffer[BUFFER_SIZE];
     bool isCancelled = false;
     pointCloud->resetPointCloud();
+    int round;
+    int numOfRounds;
 
     while (true) {
         // Accept incoming connections
         qDebug() << "accepting...";
 
-        send(serverSocket, buffer, BUFFER_SIZE, 0);
+        if(scanner->getScannerState() == CANCELLED) {
+            isCancelled = true;
+            break;
+        }
+
+        if(scanner->getScannerState() == FINISHED) {
+            break;
+        }
+
+        //send(serverSocket, buffer, BUFFER_SIZE, 0);
 
         memset(buffer, '\0', BUFFER_SIZE);
         int bytesRead = recv(serverSocket, buffer, sizeof(buffer), 0);
@@ -59,7 +70,7 @@ void Communication::readData()
             break;
         }
 
-        if(strcmp(buffer, "CANCEL") == 0) {
+        /*if(strcmp(buffer, "CANCEL") == 0) {
             send(serverSocket, buffer, sizeof(buffer), 0);
             isCancelled = true;
             break;
@@ -67,18 +78,20 @@ void Communication::readData()
 
         if(strcmp(buffer, "FINISHED") == 0) {
             break;
-        }
+        }*/
 
         char* token;
         token = strtok(buffer, " ");
 
-        //qDebug() << "token: " << token;
-        int round = atoi(token);
+        qDebug() << "token: " << token;
+        round = atoi(token);
         qDebug() << "currentStep: " << round;
         scanner->setCurrentStep(round);
         token = strtok(nullptr, " ");
+        qDebug() << "token: " << token;
+        numOfRounds = atoi(token);
         scanner->setHorizontalPrecision(atoi(token));
-        //qDebug() << "round number: " << round;
+        qDebug() << "round number: " << round;
 
         memset(buffer, '\0', BUFFER_SIZE);
         bytesRead = recv(serverSocket, buffer, sizeof(buffer), 0);
@@ -89,7 +102,7 @@ void Communication::readData()
         }
 
         int numOfScannedPoints = atoi(buffer);
-        //qDebug() << "number of scanned points : " << numOfScannedPoints;
+        qDebug() << "number of scanned points : " << numOfScannedPoints;
 
         scannedPoints->addNewDataPoint(numOfScannedPoints);
         scanner->setNumberOfPointsScanned(scanner->getNumberOfPointsScanned() + numOfScannedPoints);
@@ -159,6 +172,10 @@ void Communication::readData()
         scanner->updateScanner();
         //qDebug() << "----------------";
         //chartView->addNewDataPoint(numOfScannedPoints);
+
+        if(round == numOfRounds) {
+            break;
+        }
     }
     pointCloud->reRenderGraph();
     qDebug() << "end of readdata thread" ;
