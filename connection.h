@@ -19,13 +19,14 @@ class Connection : public QWidget
 public:
     explicit Connection(Scanner *scanner, QWidget *parent = nullptr);
 
+signals:
+    void scannerStateReceived();
+
 private:
     Scanner *scanner;
     QString ipAddress;
     QLineEdit *ipAddressInput;
     QVBoxLayout *layout;
-
-signals:
 
 };
 

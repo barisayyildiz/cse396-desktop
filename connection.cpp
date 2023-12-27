@@ -124,6 +124,7 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
                 }
                 token = strtok(NULL, " ");
             }
+            emit scannerStateReceived();
             Communication::setConfig();
         } else {
             QMessageBox::critical(this, "Invalid IP Address", "Please enter a valid IP address.");
