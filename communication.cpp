@@ -70,16 +70,6 @@ void Communication::readData()
             break;
         }
 
-        /*if(strcmp(buffer, "CANCEL") == 0) {
-            send(serverSocket, buffer, sizeof(buffer), 0);
-            isCancelled = true;
-            break;
-        }
-
-        if(strcmp(buffer, "FINISHED") == 0) {
-            break;
-        }*/
-
         char* token;
         token = strtok(buffer, " ");
 

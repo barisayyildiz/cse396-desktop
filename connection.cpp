@@ -92,6 +92,38 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             sprintf(buffer, "desktop");
             send(serverSocket, buffer, BUFFER_SIZE, 0);
 
+            // read initial scanner state
+            memset(buffer, BUFFER_SIZE, 0);
+            recv(serverSocket, buffer, BUFFER_SIZE, 0);
+            qDebug() << buffer;
+
+            char tempBuffer[BUFFER_SIZE];
+            strcpy(tempBuffer, buffer);
+            char *token = strtok(tempBuffer, " ");
+            while (token != NULL) {
+                if (strcmp(token, "scanner_state") == 0) {
+                    token = strtok(NULL, " ");
+                    if(strcmp(token, "IDLE") == 0) {
+                        this->scanner->setScannerState(ScannerState::IDLE);
+                    } else if(strcmp(token, "RUNNING") == 0) {
+                        this->scanner->setScannerState(ScannerState::RUNNING);
+                    } else if(strcmp(token, "CANCELLED") == 0) {
+                        this->scanner->setScannerState(ScannerState::CANCELLED);
+                    } else if(strcmp(token, "FINISHED") == 0) {
+                        this->scanner->setScannerState(ScannerState::CANCELLED);
+                    }
+                } else if (strcmp(token, "current_step") == 0) {
+                    token = strtok(NULL, " ");
+                    this->scanner->setCurrentStep(atoi(token));
+                } else if (strcmp(token, "current_horizontal_precision") == 0) {
+                    token = strtok(NULL, " ");
+                    this->scanner->setHorizontalPrecision(atoi(token));
+                } else if (strcmp(token, "current_vertical_precision") == 0) {
+                    token = strtok(NULL, " ");
+                    this->scanner->setVerticalPrecision(atoi(token));
+                }
+                token = strtok(NULL, " ");
+            }
             Communication::setConfig();
         } else {
             QMessageBox::critical(this, "Invalid IP Address", "Please enter a valid IP address.");
