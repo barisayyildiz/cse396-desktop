@@ -33,7 +33,6 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QWidget(parent)
 
     button->setStyleSheet("padding: 10px; margin: 10px;");
     button->setText("Start");
-    button->setEnabled(false);
 
     progressBar->setRange(0, 100);
     progressBar->setStyleSheet(
@@ -50,23 +49,15 @@ Footer::Footer(Scanner* scanner, QWidget *parent): QWidget(parent)
         );
 
     connect(button, &QPushButton::clicked, [this] {
-        this->button->setEnabled(true);
+        if(!this->scanner->getConnected()) {
+            QMessageBox::critical(this, "Scanner not connected", "Please connect to scanner");
+            return;
+        }
         if(this->scanner->getScannerState() == ScannerState::RUNNING) {
-            this->scanner->setScannerState(ScannerState::STOPPED);
-            this->button->setText("Start");
             Communication::sendConfig("cancel");
         } else {
-            char buffer[BUFFER_SIZE];
-            memset(buffer, '\0', BUFFER_SIZE);
-            sprintf(buffer, "START");
-
-            send(clientSocket, buffer, BUFFER_SIZE, 0);
-
-            this->scanner->setScannerState(ScannerState::RUNNING);
+            Communication::sendConfig("start");
             this->button->setText("Cancel");
-
-            std::thread t1(Communication::readData);
-            t1.detach();
         }
         this->scanner->updateScanner();
     });
@@ -117,12 +108,16 @@ void Footer::footerUpdated()
 
     if(scanner->getConnected()) {
         this->button->setEnabled(true);
-        if (scanner->getScannerState() == RUNNING) {
+        if(scanner->getScannerState() == IDLE) {
+            running->setText("Idle");
+        } else if (scanner->getScannerState() == RUNNING) {
             running->setText("Running");
             this->button->setText("Cancel");
-
-        } else {
+        } else if(scanner->getScannerState() == FINISHED) {
             running->setText("Finished");
+            this->button->setText("Start");
+        } else if(scanner->getScannerState() == CANCELLED) {
+            running->setText("Cancelled");
             this->button->setText("Start");
         }
     } else {

@@ -80,8 +80,8 @@ public:
         Zoom -= yoffset * ZoomSpeed;
         if (Zoom < 1.0f)
             Zoom = 1.0f;
-        if (Zoom > 45.0f)
-            Zoom = 45.0f;
+        if (Zoom > 225.0f)
+            Zoom = 225.0f;
         updateCameraPosition();
     }
 

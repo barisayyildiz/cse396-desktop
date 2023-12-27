@@ -9,8 +9,8 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
     this->layout = new QVBoxLayout(this);
 
     this->sliderValue = 0;
-    this->originalImage = new QPixmap("images/original/" + QString::number(this->sliderValue) + ".jpg");
-    this->finalImage = new QPixmap("images/red_line/" + QString::number(this->sliderValue) + ".jpg");
+    this->originalImage = new QPixmap("received_files/original/" + QString::number(this->sliderValue) + ".jpg");
+    this->finalImage = new QPixmap("received_files/final/" + QString::number(this->sliderValue) + ".jpg");
 
     this->rect = new QRect(*scanner->getTopLeftPoint(), *scanner->getBottomRightPoint());
 
@@ -51,7 +51,7 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
     this->layout->addWidget(slider);
 
     this->slider->setValue(0);
-    this->slider->setRange(0, scanner->getHorizontalPrecision()-1);
+    this->slider->setRange(0, this->scanner->getCurrentStep());
 
     // Set layout for the content widget
     this->contentWidget->setLayout(contentLayout);
@@ -83,6 +83,6 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
 
 void CapturedImages::capturedImagesUpdated()
 {
-    this->slider->setRange(0, this->scanner->getCurrentStep());
-    this->slider->setValue(this->scanner->getCurrentStep());
+    this->slider->setRange(0, this->scanner->getCurrentStep() - 1);
+    this->slider->setValue(this->scanner->getCurrentStep() - 1);
 }

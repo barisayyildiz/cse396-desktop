@@ -14,7 +14,7 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
     this->scanner = scanner;
     this->layout = new QHBoxLayout(this);
 
-    calibrationImage = new QPixmap("images/original/0.jpg");
+    calibrationImage = new QPixmap("received_files/calibration.jpg");
 
     imageLabel = new QLabel;
     imageLabel->setAlignment(Qt::AlignCenter);
@@ -58,7 +58,7 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
         this->isSubmitted = false;
 
         // Load the original image and set it as the pixmap
-        QPixmap originalImage("images/original/0.jpg");
+        QPixmap originalImage("received_files/calibration.jpg");
         imageLabel->setPixmap(originalImage);
 
         this->update();
@@ -68,12 +68,16 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
         if(this->calibrationPolygon.size() < 4) {
             QMessageBox::critical(this, "Invalid Request", "Please select 4 points");
         } else {
-            this->isSubmitted = true;
-            this->update();
-            QMessageBox msgBox;
-            msgBox.setText("Scanner calibrations have been updated");
-            msgBox.exec();
-            Communication::sendConfig(this->calibrationPolygon);
+            if(this->scanner->getConnected()) {
+                this->isSubmitted = true;
+                this->update();
+                Communication::sendConfig(this->calibrationPolygon);
+                QMessageBox msgBox;
+                msgBox.setText("Scanner calibrations have been updated");
+                msgBox.exec();
+            } else {
+                QMessageBox::critical(this, "Scanner not connected", "Please connect to scanner");
+            }
         }
     });
 
@@ -143,7 +147,7 @@ void Calibration::paintEvent(QPaintEvent* event)
     QWidget::paintEvent(event);
 
     // Load the original image
-    QPixmap originalImage("images/original/0.jpg");
+    QPixmap originalImage("received_files/calibration.jpg");
 
     // Create a pixmap with the same size as the original image
     QPixmap pixmap(originalImage.size());

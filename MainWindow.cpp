@@ -476,10 +476,17 @@ MainWindow::MainWindow(QWidget *parent)
         this->ui.listWidget->addItem(stats);
     });
 
-    connect(ui.pushButton, &QPushButton::clicked, [this, horizontalPrecisionValues]() {
-        int horizontalPrecision = horizontalPrecisionValues[ui.horizontalSlider->value()];
-        int verticalPrecision = ui.verticalSlider->value();
-        Communication::sendConfig(horizontalPrecision, verticalPrecision);
+    connect(ui.pushButton, &QPushButton::clicked, [this, horizontalPrecisionValues, scanner]() {
+        if (scanner->getConnected()) {
+            int horizontalPrecision = horizontalPrecisionValues[ui.horizontalSlider->value()];
+            int verticalPrecision = ui.verticalSlider->value();
+            Communication::sendConfig(horizontalPrecision, verticalPrecision);
+            QMessageBox msgBox;
+            msgBox.setText("Scanner precisions have been updated");
+            msgBox.exec();
+        } else {
+            QMessageBox::critical(this, "Scanner not connected", "Please connect to scanner");
+        }
     });
 
     // 2d chart
@@ -522,6 +529,9 @@ MainWindow::MainWindow(QWidget *parent)
     // new thread
     /*std::thread t1(readData, std::ref(dataSocket), scannedPoints, pointCloud, scanner);
     t1.detach();*/
+
+    std::thread tClient(Communication::readFromScanner);
+    tClient.detach();
 
     this->showMaximized(); // Maximize the window first
 

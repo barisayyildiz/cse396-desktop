@@ -18,8 +18,24 @@ PointCloud* Communication::pointCloud = nullptr;
 Scanner* Communication::scanner = nullptr;
 OpenGLWidget* Communication::openGlWidget = nullptr;
 
-int dataSocket;
+bool Communication::isConfigSet = false;
+std::mutex Communication::configMutex;
+std::condition_variable Communication::configSetCondition;
+
+int clientSocket;
+int serverSocket;
 int configSocket;
+int broadcastSocket;
+
+void Communication::setConfig() {
+    // Implement the code to set the configuration (broadcastConfig)
+
+    // Signal that the config is set
+    std::unique_lock<std::mutex> lock(configMutex);
+    isConfigSet = true;
+    lock.unlock();
+    configSetCondition.notify_one();
+}
 
 void Communication::readData()
 {
@@ -32,16 +48,19 @@ void Communication::readData()
         // Accept incoming connections
         qDebug() << "accepting...";
 
+        send(serverSocket, buffer, BUFFER_SIZE, 0);
+
         memset(buffer, '\0', BUFFER_SIZE);
-        int bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+        int bytesRead = recv(serverSocket, buffer, sizeof(buffer), 0);
+        qDebug() << "bytes read inside readData: " << bytesRead;
         if (bytesRead == -1) {
             qDebug() << "Error receiving data.";
-            close(clientSocket);
+            close(serverSocket);
             break;
         }
 
         if(strcmp(buffer, "CANCEL") == 0) {
-            send(clientSocket, buffer, sizeof(buffer), 0);
+            send(serverSocket, buffer, sizeof(buffer), 0);
             isCancelled = true;
             break;
         }
@@ -62,10 +81,10 @@ void Communication::readData()
         //qDebug() << "round number: " << round;
 
         memset(buffer, '\0', BUFFER_SIZE);
-        bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+        bytesRead = recv(serverSocket, buffer, sizeof(buffer), 0);
         if (bytesRead == -1) {
             qDebug() << "Error receiving data.";
-            close(clientSocket);
+            close(serverSocket);
             break;
         }
 
@@ -81,8 +100,8 @@ void Communication::readData()
 
         for(int i=0; i<numOfScannedPoints; i++) {
             memset(buffer, '\0', BUFFER_SIZE);
-            recv(clientSocket, buffer, sizeof(buffer), 0);
-            send(clientSocket, buffer, sizeof(buffer), 0);
+            recv(serverSocket, buffer, sizeof(buffer), 0);
+            send(serverSocket, buffer, sizeof(buffer), 0);
             //qDebug() << "buffer: " << buffer;
 
             //qDebug() << buffer;
@@ -97,7 +116,7 @@ void Communication::readData()
         }
 
         int imgSize;
-        recv(clientSocket, &imgSize, sizeof(int), 0);
+        recv(serverSocket, &imgSize, sizeof(int), 0);
         qDebug() << "imgSize: " << imgSize;
 
         std::string save_path = "received_files/original/" + std::to_string(round-1) + ".jpg";
@@ -105,18 +124,18 @@ void Communication::readData()
         for (int i = 0; i < imgSize; i += BUFFER_SIZE) {
             int remaining = std::min(BUFFER_SIZE, imgSize - i);
             memset(buffer, '\0', BUFFER_SIZE);
-            recv(clientSocket, buffer, remaining, 0);
+            recv(serverSocket, buffer, remaining, 0);
 
             // Write the received data to the file
             write(fileDescriptor, buffer, remaining);
 
-            send(clientSocket, buffer, sizeof(buffer), 0);
+            send(serverSocket, buffer, sizeof(buffer), 0);
         }
         // Close the file and socket
         close(fileDescriptor);
 
         imgSize;
-        recv(clientSocket, &imgSize, sizeof(int), 0);
+        recv(serverSocket, &imgSize, sizeof(int), 0);
         qDebug() << "imgSize: " << imgSize;
 
         save_path = "received_files/final/" + std::to_string(round-1) + ".jpg";
@@ -124,12 +143,12 @@ void Communication::readData()
         for (int i = 0; i < imgSize; i += BUFFER_SIZE) {
             int remaining = std::min(BUFFER_SIZE, imgSize - i);
             memset(buffer, '\0', BUFFER_SIZE);
-            recv(clientSocket, buffer, remaining, 0);
+            recv(serverSocket, buffer, remaining, 0);
 
             // Write the received data to the file
             write(fileDescriptor, buffer, remaining);
 
-            send(clientSocket, buffer, sizeof(buffer), 0);
+            send(serverSocket, buffer, sizeof(buffer), 0);
         }
         // Close the file and socket
         close(fileDescriptor);
@@ -146,7 +165,7 @@ void Communication::readData()
 
     if(!isCancelled) {
         int objSize;
-        recv(clientSocket, &objSize, sizeof(int), 0);
+        recv(serverSocket, &objSize, sizeof(int), 0);
         qDebug() << "objSize: " << objSize;
 
         // Receive the .obj content in packages of size 1024
@@ -156,11 +175,11 @@ void Communication::readData()
         for (int i = 0; i < objSize; i += chunkSize) {
             int remaining = std::min(chunkSize, objSize - i);
             memset(objBuffer, '\0', chunkSize);
-            recv(clientSocket, objBuffer, remaining, 0);
+            recv(serverSocket, objBuffer, remaining, 0);
             objContent += objBuffer;
 
             // Send a message to the server to keep them in sync
-            send(clientSocket, "ACK", 3, 0);
+            send(serverSocket, "ACK", 3, 0);
         }
 
         // Write the .obj content to a local file
@@ -175,64 +194,83 @@ void Communication::readData()
     scanner->updateScanner();
 }
 
+/*
+ * initialize IDLE 256 100 333.000000 225.000000 337.000000 760.000000
+ * scanner_state IDLE/RUNNING/CANCELLED/FINISHED
+ * command start
+ * command cancel
+ * command finish
+ */
+int Communication::readFromScanner() {
+    char buffer[BUFFER_SIZE];
+    float x, y;
+
+    // Wait for the config to be set
+    std::unique_lock<std::mutex> lock(configMutex);
+    configSetCondition.wait(lock, [] { return isConfigSet; });
+
+    qDebug() << "broadcastSocket: " << broadcastSocket;
+
+    while(true) {
+        memset(buffer, '\0', BUFFER_SIZE);
+        int bytesRead = recv(broadcastSocket, buffer, BUFFER_SIZE, 0);
+        if(bytesRead == 0) {
+            continue;
+        }
+        char* token = strtok(buffer, " ");
+        if(strcmp(token, "initialize") == 0) {
+            token = strtok(NULL, " "); // IDLE/RUNNING/CANCELLED/FINISHED
+            if(strcmp(token, "start") == 0) {
+                scanner->setScannerState(ScannerState::RUNNING);
+            } else if(strcmp(token, "cancel") == 0) {
+                scanner->setScannerState(ScannerState::CANCELLED);
+            } else if(strcmp(token, "finish") == 0) {
+                scanner->setScannerState(ScannerState::FINISHED);
+            }
+            token = strtok(NULL, " "); // horizontal_precision
+            scanner->setHorizontalPrecision(atoi(token));
+            token = strtok(NULL, " ");
+            scanner->setVerticalPrecision(atoi(token));
+            token = strtok(NULL, " "); x = atof(token);
+            token = strtok(NULL, " "); y = atof(token);
+            scanner->setTopLeftPoint(new QPoint(x, y));
+            token = strtok(NULL, " "); x = atof(token);
+            token = strtok(NULL, " "); y = atof(token);
+            scanner->setBottomRightPoint(new QPoint(x, y));
+        } else if(strcmp(token, "scanner_state") == 0) {
+            token = strtok(NULL, " "); // IDLE/RUNNING/CANCELLED/FINISHED
+            if(strcmp(token, "RUNNING") == 0) {
+                scanner->setScannerState(ScannerState::RUNNING);
+                scanner->setCurrentStep(0);
+                std::thread t1(Communication::readData);
+                t1.detach();
+            } else if(strcmp(token, "CANCELLED") == 0) {
+                scanner->setScannerState(ScannerState::CANCELLED);
+            } else if(strcmp(token, "FINISHED") == 0) {
+                scanner->setScannerState(ScannerState::FINISHED);
+            }
+            scanner->updateScanner();
+        }
+    }
+}
+
 int Communication::sendConfig(const char* command) {
-    qDebug() << "Gonna send some configurations";
-    configSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if(configSocket == -1) {
-        qDebug() << "Error creating client socket";
-        return 1;
-    }
-
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(CONFIG_PORT);
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    // Connect to the server
-    if (connect(configSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
-        std::cerr << "Error connecting to the server." << std::endl;
-        return 1;
-    }
-
     char buffer[BUFFER_SIZE];
     memset(buffer, '\0', BUFFER_SIZE);
 
     sprintf(buffer, "command %s", command);
     qDebug() << buffer;
     send(configSocket, buffer, BUFFER_SIZE, 0);
-
-    close(configSocket);
 }
 
 int Communication::sendConfig(int horizontalPrecision, int verticalPrecision)
 {
-    qDebug() << "Gonna send some configurations";
-    configSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if(configSocket == -1) {
-        qDebug() << "Error creating client socket";
-        return 1;
-    }
-
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(CONFIG_PORT);
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    // Connect to the server
-    if (connect(configSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
-        std::cerr << "Error connecting to the server." << std::endl;
-        return 1;
-    }
-
     char buffer[BUFFER_SIZE];
     memset(buffer, '\0', BUFFER_SIZE);
 
     sprintf(buffer, "precision %d %d", horizontalPrecision, verticalPrecision);
     qDebug() << buffer;
     send(configSocket, buffer, BUFFER_SIZE, 0);
-
-    close(configSocket);
-
 }
 
 int Communication::sendConfig(const QPolygon& calibrationPolygon)
@@ -246,30 +284,10 @@ int Communication::sendConfig(const QPolygon& calibrationPolygon)
     float bottom_left_x = calibrationPolygon[3].x();
     float bottom_left_y = calibrationPolygon[3].y();
 
-    qDebug() << "Gonna send some configurations";
-    configSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if(configSocket == -1) {
-        qDebug() << "Error creating client socket";
-        return 1;
-    }
-
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(CONFIG_PORT);
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    // Connect to the server
-    if (connect(configSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
-        std::cerr << "Error connecting to the server for sendConfig." << std::endl;
-        return 1;
-    }
-
     char buffer[BUFFER_SIZE];
     memset(buffer, '\0', BUFFER_SIZE);
 
     sprintf(buffer, "four_points %f %f %f %f %f %f %f %f", top_left_x, top_left_y, top_right_x, top_right_y, bottom_right_x, bottom_right_y, bottom_left_x, bottom_left_y);
     qDebug() << buffer;
     send(configSocket, buffer, BUFFER_SIZE, 0);
-
-    close(configSocket);
 }

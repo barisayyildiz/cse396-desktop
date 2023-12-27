@@ -5,7 +5,7 @@
 
 Scanner::Scanner()
 {
-    scannerState = ScannerState::FINISHED;
+    scannerState = ScannerState::IDLE;
     horizontalPrecision = 256;
     verticalPrecision = 100;
     currentStep = 0;
