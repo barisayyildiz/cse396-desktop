@@ -12,11 +12,12 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
     this->originalImage = new QPixmap("received_files/original/" + QString::number(this->sliderValue) + ".jpg");
     this->finalImage = new QPixmap("received_files/final/" + QString::number(this->sliderValue) + ".jpg");
 
-    this->rect = new QRect(*scanner->getTopLeftPoint(), *scanner->getBottomRightPoint());
-
     this->initialPainter = new QPainter(this->originalImage);
-    this->initialPainter->setPen(QColor(Qt::green));
-    this->initialPainter->drawRect(*rect);
+    if(this->scanner->getConnected()) {
+        this->rect = new QRect(*scanner->getTopLeftPoint(), *scanner->getBottomRightPoint());
+        this->initialPainter->setPen(QColor(Qt::green));
+        this->initialPainter->drawRect(*rect);
+    }
     this->initialPainter->end();
 
     this->scrollArea = new QScrollArea(this);
@@ -68,11 +69,6 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
         this->originalImage = new QPixmap("received_files/original/" + QString::number(value) + ".jpg");
         this->finalImage = new QPixmap("received_files/final/" + QString::number(value) + ".jpg");
 
-        // Draw bounding box on the original image
-        QPainter originalPainter(this->originalImage);
-        originalPainter.setPen(QColor(Qt::green));
-        originalPainter.drawRect(*this->rect);
-
         // Update the displayed pixmaps
         this->originalImageLabel->setPixmap(*this->originalImage);
         this->finalImageLabel->setPixmap(*this->finalImage);
@@ -83,6 +79,41 @@ CapturedImages::CapturedImages(Scanner *scanner, QWidget *parent)
 
 void CapturedImages::capturedImagesUpdated()
 {
+    // Update the slider range and value
     this->slider->setRange(0, this->scanner->getCurrentStep() - 1);
     this->slider->setValue(this->scanner->getCurrentStep() - 1);
+
+    /*
+    qDebug() << "slider updated";
+    // Get the current top-left and bottom-right points
+    QPoint topLeft = *this->scanner->getTopLeftPoint();
+    QPoint bottomRight = *this->scanner->getBottomRightPoint();
+
+    qDebug() << "topleft and bottomright fetched";
+
+    // Create a pixmap with the same size as the original image and fill it with a transparent color
+    QPixmap pixmap(this->originalImage->size());
+    pixmap.fill(Qt::transparent);
+
+    // Create a painter for the pixmap
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+
+    // Draw the new rectangle on the transparent pixmap
+    painter.setPen(QColor(Qt::green));
+    painter.drawRect(QRect(topLeft, bottomRight));
+    painter.end();
+
+    // Update the original image with the pixmap
+    QPixmap updatedOriginalImage(*this->originalImage);
+    QPainter originalPainter(&updatedOriginalImage);
+    originalPainter.setRenderHint(QPainter::Antialiasing, true);
+    originalPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    originalPainter.drawPixmap(0, 0, pixmap);
+    originalPainter.end();
+
+    // Update the displayed pixmaps
+    this->originalImageLabel->setPixmap(updatedOriginalImage);
+    this->finalImageLabel->setPixmap(*this->finalImage);
+*/
 }

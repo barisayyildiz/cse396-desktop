@@ -257,6 +257,19 @@ int Communication::readFromScanner() {
                 scanner->setScannerState(ScannerState::FINISHED);
             }
             scanner->updateScanner();
+        } else if(strcmp(token, "four_points") == 0) {
+            // four_points 0.0 0.0 100.0 100.0
+            token = strtok(NULL, " ");
+            x = atof(token);
+            token = strtok(NULL, " ");
+            y = atof(token);
+            scanner->setTopLeftPoint(new QPoint(x, y));
+            token = strtok(NULL, " ");
+            x = atof(token);
+            token = strtok(NULL, " ");
+            y = atof(token);
+            scanner->setBottomRightPoint(new QPoint(x, y));
+            scanner->updateScanner();
         }
     }
 }
@@ -284,17 +297,13 @@ int Communication::sendConfig(const QPolygon& calibrationPolygon)
 {
     float top_left_x = calibrationPolygon[0].x();
     float top_left_y = calibrationPolygon[0].y();
-    float top_right_x = calibrationPolygon[1].x();
-    float top_right_y = calibrationPolygon[1].y();
-    float bottom_right_x = calibrationPolygon[2].x();
-    float bottom_right_y = calibrationPolygon[2].y();
-    float bottom_left_x = calibrationPolygon[3].x();
-    float bottom_left_y = calibrationPolygon[3].y();
+    float bottom_right_x = calibrationPolygon[1].x();
+    float bottom_right_y = calibrationPolygon[1].y();
 
     char buffer[BUFFER_SIZE];
     memset(buffer, '\0', BUFFER_SIZE);
 
-    sprintf(buffer, "four_points %f %f %f %f %f %f %f %f", top_left_x, top_left_y, top_right_x, top_right_y, bottom_right_x, bottom_right_y, bottom_left_x, bottom_left_y);
+    sprintf(buffer, "four_points %f %f %f %f", top_left_x, top_left_y, bottom_right_x, bottom_right_y);
     qDebug() << buffer;
     send(configSocket, buffer, BUFFER_SIZE, 0);
 }

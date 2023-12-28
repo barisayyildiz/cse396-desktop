@@ -41,8 +41,6 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             QMessageBox msgBox;
             msgBox.setText("Connected to the Scanner!");
             msgBox.exec();
-            this->scanner->setConnected(true);
-            this->scanner->updateScanner();
 
             // connect to server
             struct sockaddr_in server_addr;
@@ -97,6 +95,8 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             recv(serverSocket, buffer, BUFFER_SIZE, 0);
             qDebug() << buffer;
 
+            float x, y;
+
             char tempBuffer[BUFFER_SIZE];
             strcpy(tempBuffer, buffer);
             char *token = strtok(tempBuffer, " ");
@@ -121,9 +121,17 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
                 } else if (strcmp(token, "current_vertical_precision") == 0) {
                     token = strtok(NULL, " ");
                     this->scanner->setVerticalPrecision(atoi(token));
+                } else if (strcmp(token, "four_points") == 0) {
+                    token = strtok(NULL, " "); x = atof(token);
+                    token = strtok(NULL, " "); y = atof(token);
+                    this->scanner->setTopLeftPoint(new QPoint(x, y));
+                    token = strtok(NULL, " "); x = atof(token);
+                    token = strtok(NULL, " "); y = atof(token);
+                    this->scanner->setBottomRightPoint(new QPoint(x, y));
                 }
                 token = strtok(NULL, " ");
             }
+            this->scanner->setConnected(true);
             emit scannerStateReceived();
             Communication::setConfig();
         } else {

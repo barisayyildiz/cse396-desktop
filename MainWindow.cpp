@@ -94,16 +94,18 @@ MainWindow::MainWindow(QWidget *parent)
 	ui.exportBtn->addAction(exportSTLAction);
 
     // sliders
-    ui.verticalSlider->setValue(scanner->getVerticalPrecision());
-    ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()) + "%");
-    ui.horizontalSlider->setValue(scanner->getHorizontalPrecision());
-    ui.horizontalPrecisionLabel->setText(QString::number(scanner->getHorizontalPrecision()));
-
+    const QVector<int> horizontalPrecisionValues = {2, 4, 8, 16, 32, 64, 128, 256, 512};
     ui.horizontalSlider->setRange(0, 8);  // 0 corresponds to 2, 8 corresponds to 512
     ui.horizontalSlider->setTickPosition(QSlider::TicksBelow);
     ui.horizontalSlider->setTickInterval(1);
 
-    const QVector<int> horizontalPrecisionValues = {2, 4, 8, 16, 32, 64, 128, 256, 512};
+    int index = horizontalPrecisionValues.indexOf(scanner->getHorizontalPrecision());
+    ui.horizontalSlider->setValue(index);
+    ui.horizontalPrecisionLabel->setText(QString::number(scanner->getHorizontalPrecision()));
+
+    ui.verticalSlider->setValue(scanner->getVerticalPrecision());
+    ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()) + "%");
+
     connect(ui.horizontalSlider, &QSlider::valueChanged, this, [this, scanner, horizontalPrecisionValues](int value) {
         int horizontalPrecision = horizontalPrecisionValues.at(value);
         scanner->setHorizontalPrecision(horizontalPrecision);
@@ -180,7 +182,11 @@ MainWindow::MainWindow(QWidget *parent)
     Connection *connection = new Connection(scanner);
     ui.connectionVLayout->addWidget(connection);
 
-    connect(connection, &Connection::scannerStateReceived, [this, scanner] {
+    connect(connection, &Connection::scannerStateReceived, [this, scanner, horizontalPrecisionValues] {
+        int index = horizontalPrecisionValues.indexOf(scanner->getHorizontalPrecision());
+        ui.horizontalSlider->setValue(index);
+        ui.horizontalPrecisionLabel->setText(QString::number(scanner->getHorizontalPrecision()));
+        ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()) + "%");
         scanner->updateScanner();
     });
 

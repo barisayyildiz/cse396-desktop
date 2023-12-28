@@ -49,8 +49,8 @@ private:
     int numberOfPointsScanned;
     bool connected;
 
-    QPoint* topLeftPoint = new QPoint(340.0, 244.0);
-    QPoint* bottomRightPoint = new QPoint(611.0, 747.0);
+    QPoint* topLeftPoint;
+    QPoint* bottomRightPoint;
 
     void calculateElapsedTime();
     void outputElapsedTime();

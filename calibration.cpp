@@ -65,8 +65,8 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
     });
 
     connect(submitButton, &QPushButton::pressed, [this]() {
-        if(this->calibrationPolygon.size() < 4) {
-            QMessageBox::critical(this, "Invalid Request", "Please select 4 points");
+        if(this->calibrationPolygon.size() < 2) {
+            QMessageBox::critical(this, "Invalid Request", "Please select 2 points");
         } else {
             if(this->scanner->getConnected()) {
                 this->isSubmitted = true;
@@ -86,7 +86,7 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
 
 bool Calibration::eventFilter(QObject* obj, QEvent* event)
 {
-    if (calibrationPolygon.size() == 4) {
+    if (calibrationPolygon.size() == 2) {
         if (event->type() == QEvent::MouseButtonPress) {
             QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
             if (mouseEvent->button() == Qt::LeftButton && calibrationPolygon.boundingRect().contains(mouseEvent->pos())) {
@@ -119,7 +119,7 @@ bool Calibration::eventFilter(QObject* obj, QEvent* event)
         }
     }
 
-    if (event->type() == QEvent::MouseButtonPress && calibrationPolygon.size() != 4)
+    if (event->type() == QEvent::MouseButtonPress && calibrationPolygon.size() != 2)
     {
         QLabel* imageLabel = qobject_cast<QLabel*>(obj);
         if (imageLabel) {
@@ -171,27 +171,19 @@ void Calibration::paintEvent(QPaintEvent* event)
         painter.drawLine(clickedPoint.x(), clickedPoint.y() - crossSize, clickedPoint.x(), clickedPoint.y() + crossSize);
     }
 
-    if (calibrationPolygon.size() == 2) {
-        // Draw lines connecting the first two points
-        painter.setPen(QColor(Qt::red));
-        painter.drawLine(calibrationPolygon[0], calibrationPolygon[1]);
-    }
-
-    if (calibrationPolygon.size() == 3) {
-        // Draw a triangle connecting the first three points
-        painter.setPen(QColor(Qt::red));
-        painter.drawPolygon(calibrationPolygon.mid(0, 3));
-    }
-
     if(isSubmitted) {
         painter.setPen(QColor(Qt::green));
     } else {
         painter.setPen(QColor(Qt::yellow));
     }
 
-    if (calibrationPolygon.size() == 4) {
-        // Draw the full polygon
-        painter.drawPolygon(calibrationPolygon);
+    if (calibrationPolygon.size() == 2) {
+        // Get the first two points
+        QPoint topLeft = calibrationPolygon[0];
+        QPoint bottomRight = calibrationPolygon[1];
+
+        // Draw the rectangle
+        painter.drawRect(QRect(topLeft, bottomRight));
     }
 
     // Create a painter for the original image
