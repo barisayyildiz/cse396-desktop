@@ -22,19 +22,35 @@ bool Communication::isConfigSet = false;
 std::mutex Communication::configMutex;
 std::condition_variable Communication::configSetCondition;
 
+// New definitions for readImageForCalibration
+bool Communication::isCalibrationConfigSet = false;
+std::mutex Communication::calibrationConfigMutex;
+std::condition_variable Communication::calibrationConfigSetCondition;
+
 int clientSocket;
 int serverSocket;
 int configSocket;
 int broadcastSocket;
+int calibrationImageSocket;
 
 void Communication::setConfig() {
     // Implement the code to set the configuration (broadcastConfig)
 
     // Signal that the config is set
-    std::unique_lock<std::mutex> lock(configMutex);
+    std::unique_lock<std::mutex> configLock(configMutex, std::defer_lock);
+    std::unique_lock<std::mutex> calibrationLock(calibrationConfigMutex, std::defer_lock);
+
+    std::lock(configLock, calibrationLock); // Lock both mutexes at once
+
     isConfigSet = true;
-    lock.unlock();
+    isCalibrationConfigSet = true;
+
+    configLock.unlock();
+    calibrationLock.unlock();
+
+    // Notify waiting threads
     configSetCondition.notify_one();
+    calibrationConfigSetCondition.notify_one();
 }
 
 void Communication::readData()
@@ -272,6 +288,36 @@ int Communication::readFromScanner() {
             scanner->updateScanner();
         }
     }
+}
+
+int Communication::readImageForCalibration() {
+    char buffer[BUFFER_SIZE];
+
+    // Wait for the config to be set
+    std::unique_lock<std::mutex> lock(calibrationConfigMutex);
+    calibrationConfigSetCondition.wait(lock, [] { return isCalibrationConfigSet; });
+
+    while(true) {
+        int imgSize;
+        recv(calibrationImageSocket, &imgSize, sizeof(int), 0);
+        qDebug() << "imgSize: " << imgSize;
+
+        std::string save_path = "received_files/calibration.jpg";
+        int fileDescriptor = open(save_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        for (int i = 0; i < imgSize; i += BUFFER_SIZE) {
+            int remaining = std::min(BUFFER_SIZE, imgSize - i);
+            memset(buffer, '\0', BUFFER_SIZE);
+            recv(calibrationImageSocket, buffer, remaining, 0);
+
+            // Write the received data to the file
+            write(fileDescriptor, buffer, remaining);
+
+            send(calibrationImageSocket, buffer, sizeof(buffer), 0);
+        }
+        // Close the file and socket
+        close(fileDescriptor);
+    }
+    return 0;
 }
 
 int Communication::sendConfig(const char* command) {

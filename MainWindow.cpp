@@ -200,6 +200,9 @@ MainWindow::MainWindow(QWidget *parent)
     std::thread tClient(Communication::readFromScanner);
     tClient.detach();
 
+    std::thread tCalibrationImage(Communication::readImageForCalibration);
+    tCalibrationImage.detach();
+
     this->showMaximized(); // Maximize the window first
 
     // Now set the fixed size to control the initial size when maximized

@@ -46,6 +46,7 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             struct sockaddr_in server_addr;
             struct sockaddr_in config_addr;
             struct sockaddr_in broadcast_addr;
+            struct sockaddr_in calibration_image_addr;
 
             // update clientSocket
             if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -57,6 +58,10 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
                 exit(EXIT_FAILURE);
             }
             if ((broadcastSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+                perror("Socket creation failed");
+                exit(EXIT_FAILURE);
+            }
+            if ((calibrationImageSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
                 perror("Socket creation failed");
                 exit(EXIT_FAILURE);
             }
@@ -75,6 +80,10 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             broadcast_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
             broadcast_addr.sin_port = htons(BROADCAST_PORT);
 
+            calibration_image_addr.sin_family = AF_INET;
+            calibration_image_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+            calibration_image_addr.sin_port = htons(IMAGE_PORT);
+
             if (::connect(serverSocket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
                 perror("Connection failed");
             }
@@ -82,6 +91,9 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
                 perror("Connection failed");
             }
             if (::connect(broadcastSocket, (struct sockaddr*)&broadcast_addr, sizeof(broadcast_addr)) == -1) {
+                perror("Connection failed");
+            }
+            if (::connect(calibrationImageSocket, (struct sockaddr*)&calibration_image_addr, sizeof(calibration_image_addr)) == -1) {
                 perror("Connection failed");
             }
 

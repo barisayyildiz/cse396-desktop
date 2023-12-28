@@ -50,7 +50,7 @@ Calibration::Calibration(Scanner* scanner, QWidget* parent)
     this->layout->addItem(new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     connect(fetchImageButton, &QPushButton::pressed, [this]() {
-
+        Communication::sendConfig("calibration_image");
     });
 
     connect(resetButton, &QPushButton::pressed, [this]() {
