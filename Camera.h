@@ -52,14 +52,14 @@ public:
     //Process input to update the camera's position
     void ProcessInput(float xoffset, float yoffset, bool pan = false)
     {
-        if (pan) 
+        if (pan)
         {
             Target += Right * xoffset * PanSpeed;
             Target += Up * yoffset * PanSpeed;
 
             updateCameraPosition();
         }
-        else 
+        else
         {
             Yaw += xoffset * OrbitSpeed;
             Pitch += yoffset * OrbitSpeed;
@@ -88,18 +88,25 @@ public:
 private:
     void updateCameraVectors()
     {
-        //Calculate the new front vector
+        // Calculate the new front vector
         glm::vec3 front;
         front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
         front.y = sin(glm::radians(Pitch));
         front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+
+        // Ensure that the pitch stays within reasonable bounds
+        if (Pitch > 89.0f)
+            Pitch = 89.0f;
+        if (Pitch < -89.0f)
+            Pitch = -89.0f;
+
         Front = glm::normalize(front);
 
-        //Re-calculate the right and up vectors
+        // Re-calculate the right and up vectors
         Right = glm::normalize(glm::cross(Front, WorldUp));
         Up = glm::normalize(glm::cross(Right, Front));
 
-        //Update the camera's position based on the new orientation
+        // Update the camera's position based on the new orientation
         updateCameraPosition();
     }
 

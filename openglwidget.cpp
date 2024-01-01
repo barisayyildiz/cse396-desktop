@@ -69,6 +69,11 @@ void OpenGLWidget::initializeGL()
 
 void OpenGLWidget::paintGL()
 {
+    if(reloadFlag) {
+        model = new Model("received_files/3d.obj", "New Model");
+        model->SetMeshTexture(0, "res/textures/vercetti.png");
+        reloadFlag = false;
+    }
     //set the background color
     glClearColor(backgroundColor.redF(), backgroundColor.greenF(), backgroundColor.blueF(), 1.0f);
 
@@ -196,6 +201,7 @@ void OpenGLWidget::SetModelTexture(std::string path)
 
 void OpenGLWidget::loadModel(const std::string path)
 {
+    reloadFlag = true;
     /*makeCurrent();
     shader = new Shader("res/shaders/shader.vs", "res/shaders/shader.ps");
     model = new Model("received_files/3d.obj", "New Model");

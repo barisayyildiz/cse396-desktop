@@ -58,6 +58,8 @@ private:
 
     bool isWireframe;
 
+    bool reloadFlag;
+
     std::unordered_map<std::string, unsigned int> mapTexture;
 
 public:

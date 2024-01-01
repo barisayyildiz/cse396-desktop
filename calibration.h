@@ -44,6 +44,9 @@ private:
     bool eventFilter(QObject* obj, QEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
 
+public:
+    void reloadImage();
+
 signals:
 };
 

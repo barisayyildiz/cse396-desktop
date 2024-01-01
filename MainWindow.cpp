@@ -50,6 +50,8 @@
 
 #include "communication.h"
 
+Scanner *scanner;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -57,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 	ui.showEdgesBtn->setCheckable(true);
 
-    Scanner* scanner = new Scanner();
+    scanner = new Scanner();
 
     auto exportOBJAction = new QAction(QString("OBJ"), (QObject*)ui.exportBtn->menu());
     auto exportSTLAction = new QAction(QString("STL"), (QObject*)ui.exportBtn->menu());
@@ -185,6 +187,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(connection, &Connection::scannerStateReceived, [this, scanner, horizontalPrecisionValues] {
         int index = horizontalPrecisionValues.indexOf(scanner->getHorizontalPrecision());
         ui.horizontalSlider->setValue(index);
+        ui.verticalSlider->setValue(scanner->getVerticalPrecision());
         ui.horizontalPrecisionLabel->setText(QString::number(scanner->getHorizontalPrecision()));
         ui.verticalPrecisionLabel->setText(QString::number(scanner->getVerticalPrecision()) + "%");
         scanner->updateScanner();
@@ -196,12 +199,16 @@ MainWindow::MainWindow(QWidget *parent)
     Communication::pointCloud = pointCloud;
     Communication::scanner = scanner;
     Communication::openGlWidget = ui.openGLWidget;
+    Communication::calibration = calibration;
 
     std::thread tClient(Communication::readFromScanner);
     tClient.detach();
 
     std::thread tCalibrationImage(Communication::readImageForCalibration);
     tCalibrationImage.detach();
+
+    std::thread tLive(Communication::readLiveData);
+    tLive.detach();
 
     this->showMaximized(); // Maximize the window first
 

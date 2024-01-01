@@ -141,6 +141,26 @@ bool Calibration::eventFilter(QObject* obj, QEvent* event)
     return QWidget::eventFilter(obj, event);
 }
 
+void Calibration::reloadImage() {
+    // Load the original image
+    QPixmap originalImage("received_files/calibration.jpg");
+
+    // Create a pixmap with the same size as the original image
+    QPixmap pixmap(originalImage.size());
+    pixmap.fill(Qt::transparent);
+
+    // Create a painter for the original image
+    QPainter originalPainter(&originalImage);
+    originalPainter.setRenderHint(QPainter::Antialiasing, true);
+    originalPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+    // Draw the pixmap onto the original image
+    originalPainter.drawPixmap(0, 0, pixmap);
+
+    // Set the updated original image as the pixmap to the QLabel
+    imageLabel->setPixmap(originalImage);
+}
+
 void Calibration::paintEvent(QPaintEvent* event)
 {
     // Call the base class implementation

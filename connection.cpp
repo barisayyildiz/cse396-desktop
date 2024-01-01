@@ -47,6 +47,7 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             struct sockaddr_in config_addr;
             struct sockaddr_in broadcast_addr;
             struct sockaddr_in calibration_image_addr;
+            struct sockaddr_in live_addr;
 
             // update clientSocket
             if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -65,24 +66,35 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
                 perror("Socket creation failed");
                 exit(EXIT_FAILURE);
             }
+            if ((liveSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+                perror("Socket creation failed");
+                exit(EXIT_FAILURE);
+            }
+            // 192.168.1.54
+            // 127.0.0.1
+
 
             qDebug() << "connection: serverSocket: " << serverSocket;
 
             server_addr.sin_family = AF_INET;
-            server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+            server_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
             server_addr.sin_port = htons(SERVER_PORT);
 
             config_addr.sin_family = AF_INET;
-            config_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+            config_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
             config_addr.sin_port = htons(CONFIG_PORT);
 
             broadcast_addr.sin_family = AF_INET;
-            broadcast_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+            broadcast_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
             broadcast_addr.sin_port = htons(BROADCAST_PORT);
 
             calibration_image_addr.sin_family = AF_INET;
-            calibration_image_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+            calibration_image_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
             calibration_image_addr.sin_port = htons(IMAGE_PORT);
+
+            live_addr.sin_family = AF_INET;
+            live_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
+            live_addr.sin_port = htons(LIVE_PORT);
 
             if (::connect(serverSocket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
                 perror("Connection failed");
@@ -96,6 +108,10 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             if (::connect(calibrationImageSocket, (struct sockaddr*)&calibration_image_addr, sizeof(calibration_image_addr)) == -1) {
                 perror("Connection failed");
             }
+            if (::connect(liveSocket, (struct sockaddr*)&live_addr, sizeof(live_addr)) == -1) {
+                perror("Connection failed");
+            }
+
 
             char buffer[BUFFER_SIZE];
             memset(buffer, '\0', BUFFER_SIZE);
@@ -103,7 +119,7 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             send(serverSocket, buffer, BUFFER_SIZE, 0);
 
             // read initial scanner state
-            memset(buffer, BUFFER_SIZE, 0);
+            memset(buffer, '\0', 0);
             recv(serverSocket, buffer, BUFFER_SIZE, 0);
             qDebug() << buffer;
 
