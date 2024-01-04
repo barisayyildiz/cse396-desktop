@@ -15,6 +15,7 @@ Scanner::Scanner()
 
 void Scanner::startTimer()
 {
+    numberOfPointsScanned = 0;
     startTime = std::chrono::high_resolution_clock::now();
     scannerState = ScannerState::RUNNING;
     // Start a thread to periodically print the elapsed time

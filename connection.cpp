@@ -70,30 +70,30 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
                 perror("Socket creation failed");
                 exit(EXIT_FAILURE);
             }
-            // 192.168.1.54
+            // 192.168.148.153
             // 127.0.0.1
 
 
             qDebug() << "connection: serverSocket: " << serverSocket;
 
             server_addr.sin_family = AF_INET;
-            server_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
+            server_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
             server_addr.sin_port = htons(SERVER_PORT);
 
             config_addr.sin_family = AF_INET;
-            config_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
+            config_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
             config_addr.sin_port = htons(CONFIG_PORT);
 
             broadcast_addr.sin_family = AF_INET;
-            broadcast_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
+            broadcast_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
             broadcast_addr.sin_port = htons(BROADCAST_PORT);
 
             calibration_image_addr.sin_family = AF_INET;
-            calibration_image_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
+            calibration_image_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
             calibration_image_addr.sin_port = htons(IMAGE_PORT);
 
             live_addr.sin_family = AF_INET;
-            live_addr.sin_addr.s_addr = inet_addr("192.168.1.54");
+            live_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
             live_addr.sin_port = htons(LIVE_PORT);
 
             if (::connect(serverSocket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {

@@ -63,180 +63,6 @@ void Communication::setConfig() {
     liveCondition.notify_one();
 }
 
-void Communication::readData()
-{
-    scanner->startTimer();
-    char buffer[BUFFER_SIZE];
-    bool isCancelled = false;
-    pointCloud->resetPointCloud();
-    int round;
-    int numOfRounds;
-
-    while (true) {
-        // Accept incoming connections
-        qDebug() << "accepting...";
-
-        if(scanner->getScannerState() == CANCELLED) {
-            isCancelled = true;
-            break;
-        }
-
-        if(scanner->getScannerState() == FINISHED) {
-            break;
-        }
-
-        //send(serverSocket, buffer, BUFFER_SIZE, 0);
-
-        memset(buffer, '\0', BUFFER_SIZE);
-        int bytesRead = recv(serverSocket, buffer, sizeof(buffer), 0);
-        qDebug() << "bytes read inside readData: " << bytesRead;
-        if (bytesRead == -1) {
-            qDebug() << "Error receiving data.";
-            close(serverSocket);
-            break;
-        }
-
-        char* token;
-        token = strtok(buffer, " ");
-
-        qDebug() << "token: " << token;
-        round = atoi(token);
-        qDebug() << "currentStep: " << round;
-        scanner->setCurrentStep(round);
-        token = strtok(nullptr, " ");
-        qDebug() << "token: " << token;
-        numOfRounds = atoi(token);
-        scanner->setHorizontalPrecision(atoi(token));
-        qDebug() << "round number: " << round;
-
-        memset(buffer, '\0', BUFFER_SIZE);
-        bytesRead = recv(serverSocket, buffer, sizeof(buffer), 0);
-        if (bytesRead == -1) {
-            qDebug() << "Error receiving data.";
-            close(serverSocket);
-            break;
-        }
-
-        int numOfScannedPoints = atoi(buffer);
-        qDebug() << "number of scanned points : " << numOfScannedPoints;
-
-        scannedPoints->addNewDataPoint(numOfScannedPoints);
-        scanner->setNumberOfPointsScanned(scanner->getNumberOfPointsScanned() + numOfScannedPoints);
-
-        /*ScannerState scannerState;
-        int verticalPrecision;
-        int numberOfPointsScanned;*/
-
-        for(int i=0; i<numOfScannedPoints; i++) {
-            memset(buffer, '\0', BUFFER_SIZE);
-            int numofbytes = recv(serverSocket, buffer, sizeof(buffer), 0);
-            //send(serverSocket, buffer, sizeof(buffer), 0);
-            //qDebug() << "buffer: " << buffer;
-
-            qDebug() << buffer;
-            qDebug() << "numberofbytes: " << numofbytes;
-            double x, y, z;
-
-            QTextStream stream(buffer);
-            stream >> x >> y >> z;
-
-            //std::cout << "x: " << x << ", y: " << y << ", z: " << z << std::endl;
-            //qDebug() << "x: " << x << ", y: " << y << ", z: " << z;
-            pointCloud->addNewDataPoint(x, y, z);
-        }
-
-        int imgSize;
-        recv(serverSocket, &imgSize, sizeof(int), 0);
-        qDebug() << "imgSize: " << imgSize;
-
-        std::string save_path = "received_files/original/" + std::to_string(round-1) + ".jpg";
-        int fileDescriptor = open(save_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-        for (int i = 0; i < imgSize; i += BUFFER_SIZE) {
-            int remaining = std::min(BUFFER_SIZE, imgSize - i);
-            memset(buffer, '\0', BUFFER_SIZE);
-            int r = recv(serverSocket, buffer, remaining, 0);
-
-            qDebug() << "read bytes: " << r;
-
-            // Write the received data to the file
-            write(fileDescriptor, buffer, remaining);
-            usleep(30);
-
-            //send(serverSocket, buffer, sizeof(buffer), 0);
-        }
-        // Close the file and socket
-        close(fileDescriptor);
-
-        imgSize;
-        recv(serverSocket, &imgSize, sizeof(int), 0);
-        qDebug() << "imgSize: " << imgSize;
-
-        save_path = "received_files/final/" + std::to_string(round-1) + ".jpg";
-        fileDescriptor = open(save_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-        for (int i = 0; i < imgSize; i += BUFFER_SIZE) {
-            int remaining = std::min(BUFFER_SIZE, imgSize - i);
-            memset(buffer, '\0', BUFFER_SIZE);
-            int r = recv(serverSocket, buffer, remaining, 0);
-
-            qDebug() << "read bytes2: " << r;
-
-            // Write the received data to the file
-            write(fileDescriptor, buffer, remaining);
-
-            usleep(30);
-
-            //send(serverSocket, buffer, sizeof(buffer), 0);
-        }
-        // Close the file and socket
-        close(fileDescriptor);
-
-        if(round%5 == 0) {
-            pointCloud->reRenderGraph();
-        }
-        scanner->updateScanner();
-        //qDebug() << "----------------";
-        //chartView->addNewDataPoint(numOfScannedPoints);
-
-        if(round == numOfRounds) {
-            break;
-        }
-    }
-    pointCloud->reRenderGraph();
-    qDebug() << "end of readdata thread" ;
-
-    if(!isCancelled) {
-        int objSize;
-        recv(serverSocket, &objSize, sizeof(int), 0);
-        qDebug() << "objSize: " << objSize;
-
-        // Receive the .obj content in packages of size 1024
-        std::string objContent;
-        int chunkSize = BUFFER_SIZE;
-        char objBuffer[chunkSize];
-        for (int i = 0; i < objSize; i += chunkSize) {
-            int remaining = std::min(chunkSize, objSize - i);
-            memset(objBuffer, '\0', chunkSize);
-            recv(serverSocket, objBuffer, remaining, 0);
-            objContent += objBuffer;
-
-            usleep(30);
-
-            // Send a message to the server to keep them in sync
-            //send(serverSocket, "ACK", 3, 0);
-        }
-
-        // Write the .obj content to a local file
-        std::ofstream objFile("received_files/3d.obj");
-        objFile << objContent;
-        objFile.close();
-
-        //openGlWidget->loadModel("received_files/3d.obj");
-    }
-
-    scanner->stopTimer();
-    scanner->updateScanner();
-}
-
 void Communication::readLiveData() {
     //char buffer[BUFFER_SIZE];
     std::vector<char> buffer(BUFFER_SIZE, '\0');
@@ -289,7 +115,7 @@ void Communication::readLiveData() {
             qDebug() << "round";
             send(liveSocket, "ack", 3, 0);
             //send(liveSocket, buffer, BUFFER_SIZE, 0);
-            scanner->updateScanner();
+            //scanner->updateScanner();
             //token = strtok(NULL, " ");
             iss >> round;
             //round = atoi(token);
@@ -325,13 +151,6 @@ void Communication::readLiveData() {
                 //send(liveSocket, buffer, sizeof(buffer), 0);
 
                 double x, y, z;
-                // Create a QByteArray from the std::vector<char>
-                /*QByteArray byteArray(buffer.data(), buffer.size());
-
-                QDataStream dataStream(&byteArray, QIODevice::ReadOnly);
-
-                dataStream >> x >> y >> z;
-                */
                 std::istringstream iss(buffer.data());
                 iss >> x >> y >> z;
 
@@ -396,6 +215,7 @@ void Communication::readLiveData() {
             }
             // Close the file and socket
             close(fileDescriptor);
+            scanner->updateScanner();
             qDebug() << "second image is done...";
         } else if(token == "FINISH_SCANNING") {
             send(liveSocket, "ack", 3, 0);

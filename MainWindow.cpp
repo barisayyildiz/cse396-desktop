@@ -131,11 +131,19 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     connect(ui.openGLWidget, &OpenGLWidget::modelUploaded , [this]() {
+        this->ui.listWidget->clear();
+
+        QListWidgetItem* headerItem = new QListWidgetItem("Stats");
+        QFont font = headerItem->font();
+        font.setPointSize(20); // Set a custom font size for the header item
+        headerItem->setFont(font);
+        ui.listWidget->addItem(headerItem);
+
         QString stats = QString("Total number of nodes: %1").arg(this->ui.openGLWidget->model->getTotalNumberOfNodes());
         this->ui.listWidget->addItem(stats);
         stats = QString("Total number of meshes: %1").arg(this->ui.openGLWidget->model->getTotalNumberOfMeshes());
         this->ui.listWidget->addItem(stats);
-        stats = QString("Total number of vertices: %1").arg(this->ui.openGLWidget->model->getTotalNumberOfVertices());
+        stats = QString("Total number of vertices: %1").arg((this->ui.openGLWidget->model->getTotalNumberOfFaces() / 2) + 2);
         this->ui.listWidget->addItem(stats);
         stats = QString("Total number of faces: %1").arg(this->ui.openGLWidget->model->getTotalNumberOfFaces());
         this->ui.listWidget->addItem(stats);

@@ -73,6 +73,7 @@ void OpenGLWidget::paintGL()
         model = new Model("received_files/3d.obj", "New Model");
         model->SetMeshTexture(0, "res/textures/vercetti.png");
         reloadFlag = false;
+        emit modelUploaded();
     }
     //set the background color
     glClearColor(backgroundColor.redF(), backgroundColor.greenF(), backgroundColor.blueF(), 1.0f);
