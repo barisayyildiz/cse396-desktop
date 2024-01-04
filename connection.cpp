@@ -77,23 +77,23 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             qDebug() << "connection: serverSocket: " << serverSocket;
 
             server_addr.sin_family = AF_INET;
-            server_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
+            server_addr.sin_addr.s_addr = inet_addr(inputText.toUtf8().constData());
             server_addr.sin_port = htons(SERVER_PORT);
 
             config_addr.sin_family = AF_INET;
-            config_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
+            config_addr.sin_addr.s_addr = inet_addr(inputText.toUtf8().constData());
             config_addr.sin_port = htons(CONFIG_PORT);
 
             broadcast_addr.sin_family = AF_INET;
-            broadcast_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
+            broadcast_addr.sin_addr.s_addr = inet_addr(inputText.toUtf8().constData());
             broadcast_addr.sin_port = htons(BROADCAST_PORT);
 
             calibration_image_addr.sin_family = AF_INET;
-            calibration_image_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
+            calibration_image_addr.sin_addr.s_addr = inet_addr(inputText.toUtf8().constData());
             calibration_image_addr.sin_port = htons(IMAGE_PORT);
 
             live_addr.sin_family = AF_INET;
-            live_addr.sin_addr.s_addr = inet_addr("192.168.148.153");
+            live_addr.sin_addr.s_addr = inet_addr(inputText.toUtf8().constData());
             live_addr.sin_port = htons(LIVE_PORT);
 
             if (::connect(serverSocket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
