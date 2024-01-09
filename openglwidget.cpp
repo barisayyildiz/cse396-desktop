@@ -63,7 +63,6 @@ void OpenGLWidget::initializeGL()
 
     model->SetMeshTexture(0, "res/textures/vercetti.png");
 
-    //signal that everything is initialize, now we can fill the animation list on GUI
     emit initialized();
 }
 
@@ -75,16 +74,15 @@ void OpenGLWidget::paintGL()
         reloadFlag = false;
         emit modelUploaded();
     }
-    //set the background color
     glClearColor(backgroundColor.redF(), backgroundColor.greenF(), backgroundColor.blueF(), 1.0f);
 
-    //clear the color and depth using the color we set above
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if(isWireframe)
+    if(isWireframe) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    else
+    } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 
     shader->Use();
 
@@ -95,30 +93,26 @@ void OpenGLWidget::paintGL()
     shader->SetMat4("view", camera.GetViewMatrix());
     shader->SetMat4("modelMatrix", modelMat);
 
-    // Set light properties
-    /*shader->SetVec3("light.direction", glm::vec3(1.0f, -1.0f, -1.0f));  // Directional light from the top-left
-    shader->SetVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-    shader->SetVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));*/
-
     // Set light properties for the first light
     shader->SetVec3("light.direction", glm::vec3(1.0f, -1.0f, -1.0f));  // Directional light from the top-left
     shader->SetVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
     shader->SetVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 
     // Set light properties for the second light (opposite direction)
-    shader->SetVec3("lightDirection2", glm::vec3(-1.0f, 1.0f, 1.0f));  // Directional light from the bottom-right
-    shader->SetVec3("lightAmbient2", glm::vec3(0.2f, 0.2f, 0.2f));
-    shader->SetVec3("lightDiffuse2", glm::vec3(0.5f, 0.5f, 0.5f));
+    shader->SetVec3("light2.direction", glm::vec3(-1.0f, 1.0f, 1.0f));  // Directional light from the bottom-right
+    shader->SetVec3("light2.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+    shader->SetVec3("light2.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 
     if(model) {
         const auto& meshes{ model->GetMeshes() };
 
         for (const auto& mesh : meshes)
         {
-            if (!isWireframe)
-                glBindTexture(GL_TEXTURE_2D, mesh.material->GetParameterTexture(Material::NORMAL));
-            else
+            if (!isWireframe) {
+                glBindTexture(GL_TEXTURE_2D, mesh.material->GetMaterialTexture());
+            } else {
                 glBindTexture(GL_TEXTURE_2D, 0);
+            }
 
             glActiveTexture(GL_TEXTURE0);
 
@@ -128,7 +122,6 @@ void OpenGLWidget::paintGL()
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
-        //Qt update
         update();
     }
 }
@@ -162,11 +155,9 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
     if (event->buttons() & Qt::LeftButton)
     {
         if (event->modifiers() & Qt::ControlModifier) {
-            // Handle panning
             camera.ProcessInput(deltaX, deltaY, true);
         }
         else {
-            // Handle regular camera movement
             camera.ProcessInput(deltaX, deltaY);
         }
     }
@@ -176,19 +167,14 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
 
 void OpenGLWidget::wheelEvent(QWheelEvent* event)
 {
-    // The delta is given in 1/8th degree steps
     float delta = event->angleDelta().y();
 
-    // You can adjust the sensitivity based on your requirements
     float  sensitivity= 0.002f;
 
     camera.ProcessMouseScroll(delta * sensitivity);
 
-    // Accept the event to prevent it from being propagated further
     event->accept();
 }
-
-
 
 void OpenGLWidget::SetModelTexture(std::string path)
 {
@@ -203,14 +189,4 @@ void OpenGLWidget::SetModelTexture(std::string path)
 void OpenGLWidget::loadModel(const std::string path)
 {
     reloadFlag = true;
-    /*makeCurrent();
-    shader = new Shader("res/shaders/shader.vs", "res/shaders/shader.ps");
-    model = new Model("received_files/3d.obj", "New Model");
-    emit modelUploaded();
-    model->SetMeshTexture(0, "res/textures/vercetti.png");*/
-    //model->Delete();
-    //this->initializeGL();
-    /*model = NULL;
-    model = new Model("received_files/3d.obj", "New Model");*/
-    //model = new Model(path, "New Model");
 }

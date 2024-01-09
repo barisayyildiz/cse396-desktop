@@ -8,9 +8,7 @@
 #include "global.h"
 
 Material::Material() {
-	// Set material defaults
-	std::fill(m_materialTextures.begin(), m_materialTextures.end(), 0);
-	std::fill(m_materialColors.begin(), m_materialColors.end(), glm::vec3(0.0f));
+    materialTexture = 0;
 }
 
 unsigned int Material::LoadTexture(char const* path)
@@ -53,32 +51,14 @@ unsigned int Material::LoadTexture(char const* path)
 void Material::Init(const std::string name, const std::string normalPath)
 {
 	Name = name;
-
-	m_materialTextures[NORMAL] = LoadTexture(normalPath.c_str());
-}
-
-
-void Material::Init(const std::string name,
-	const glm::vec3& normal,
-	const float alpha)
-{
-	Name = name;
-
-	m_materialColors[NORMAL] = normal;
-
-	m_alpha = alpha;
+    materialTexture = LoadTexture(normalPath.c_str());
 }
 
 void Material::Set(unsigned int id)
 {
-	m_materialTextures[NORMAL] = id;
+    materialTexture = id;
 }
 
-
-unsigned int Material::GetParameterTexture(const ParameterType parameter) const noexcept {
-	return m_materialTextures[parameter];
-}
-
-glm::vec3 Material::GetParameterColor(const ParameterType parameter) const noexcept {
-	return m_materialColors[parameter];
+unsigned int Material::GetMaterialTexture() {
+    return materialTexture;
 }

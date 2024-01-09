@@ -12,9 +12,6 @@
 #define IMAGE_PORT 3003
 #define LIVE_PORT 3004
 
-#define DATA_PORT 5000
-#define COMMAND_PORT 6000
-
 #define BUFFER_SIZE 1024
 
 #include "scanner.h"

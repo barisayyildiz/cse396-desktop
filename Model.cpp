@@ -58,10 +58,10 @@ bool Model::ExportModel(std::string filePath, ExportFormat exportFormat)
     return true;
 }
 
-bool Model::loadModel(const std::string Path) {	
-	const aiScene* pScene{ nullptr };
+bool Model::loadModel(const std::string path) {
+    const aiScene* pScene = nullptr;
 
-    pScene = m_importer.ReadFile(Path.data(),
+    pScene = m_importer.ReadFile(path.data(),
                                  aiProcess_Triangulate |
                                  aiProcess_JoinIdenticalVertices |
                                  aiProcess_GenUVCoords |
@@ -85,10 +85,9 @@ bool Model::loadModel(const std::string Path) {
 
     processNode(pScene->mRootNode, pScene);
 
-	m_path = Path.substr(0, Path.find_last_of('/')); // Strip the model file name and keep the model folder.
+    m_path = path.substr(0, path.find_last_of('/'));
 	m_path += "/";
 
-    //importer.FreeScene();
 	return true;
 }
 
@@ -102,8 +101,7 @@ void Model::processNode(aiNode* node, const aiScene* scene) {
 	}
 
     this->totalNumOfNodes += node->mNumChildren;
-	// Process their children via recursive tree traversal
-	for (auto i = 0; i < node->mNumChildren; ++i) {
+    for (auto i = 0; i < node->mNumChildren; ++i) {
         processNode(node->mChildren[i], scene);
     }
 }
@@ -156,17 +154,11 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
         aiString name;
         mat->Get(AI_MATKEY_NAME, name);
 
-        // Get the first texture for each texture type we need
-        // since there could be multiple textures per type
-        aiString metallicPath;
-        mat->GetTexture(aiTextureType_AMBIENT, 0, &metallicPath);
-
         aiString normalPath;
-        mat->GetTexture(/*aiTextureType_HEIGHT*/aiTextureType_DIFFUSE, 0, &normalPath);
+        mat->GetTexture(aiTextureType_DIFFUSE, 0, &normalPath);
 
         auto newMat = Material();
         newMat.Init(name.C_Str(), normalPath.C_Str());
-
 
         ++m_numMats;
         return Mesh(vertices, indices, std::make_shared<Material>(newMat));

@@ -16,7 +16,6 @@ enum ExportFormat {
     STL
 };
 
-
 struct aiScene;
 struct aiNode;
 struct aiMesh;
@@ -27,7 +26,6 @@ public:
 
 	void AttachMesh(const Mesh mesh) noexcept;
 
-	// Destroys all OpenGL handles for all submeshes. This should only be called by ResourceManager.
 	void Delete();
 
 	auto GetMeshes() const noexcept { return m_meshes; }
@@ -51,9 +49,7 @@ private:
 
 	Assimp::Importer m_importer;
 
-	// Model name
-	const std::string m_name;
-	// Location on disk holding model and textures
+    const std::string m_name;
 	std::string m_path;
 
 	std::size_t m_numMats;

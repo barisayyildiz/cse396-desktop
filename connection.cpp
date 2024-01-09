@@ -33,7 +33,7 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
     this->layout->setSpacing(20);
     this->setLayout(this->layout);
 
-    connect(submitButton, &QPushButton::pressed, [this, validator, regEx, serverSocket, configSocket, broadcastSocket]() {
+    connect(submitButton, &QPushButton::pressed, [this, validator, regEx, serverSocket, configSocket, broadcastSocket, submitButton]() {
         QString inputText = ipAddressInput->text();
         QRegularExpressionMatch match = regEx.match(inputText, 0, QRegularExpression::PartialPreferCompleteMatch);
         bool hasMatch = match.hasMatch();
@@ -124,6 +124,8 @@ Connection::Connection(Scanner *scanner, QWidget *parent)
             qDebug() << buffer;
 
             float x, y;
+
+            submitButton->setEnabled(false);
 
             char tempBuffer[BUFFER_SIZE];
             strcpy(tempBuffer, buffer);

@@ -18,31 +18,20 @@ public:
 	void Init(const std::string name,
 		const std::string normalPath);
 
-	void Init(const std::string name,
-		const glm::vec3& normal,
-		const float alpha = 1.0f);
-
 	void Set(unsigned int id);
 
-	auto operator==(const Material& rhs) const noexcept {
-		return Name == rhs.Name;
+    auto operator==(const Material& mat) const noexcept {
+        return Name == mat.Name;
 	}
 
 	std::string Name;
 
-	unsigned int GetParameterTexture(const ParameterType parameter) const noexcept;
-	glm::vec3 GetParameterColor(const ParameterType parameter) const noexcept;
+    unsigned int GetMaterialTexture();
 
 	static unsigned int LoadTexture(char const* path);
 
 private:
-	// unsigned int HeightMap;
-
-	std::array<unsigned int, 5> m_materialTextures;
-	std::array<glm::vec3, 5> m_materialColors;
-
-	float m_alpha;
-	unsigned int m_alphaMaskTexture;
+    int materialTexture;
 };
 
 using MaterialPtr = std::shared_ptr<Material>;
